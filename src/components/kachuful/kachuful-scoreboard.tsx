@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,13 +23,9 @@ const TRUMP_SUITS = [
 ] as const
 
 export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboardProps) {
-  const [currentRoundData, setCurrentRoundData] = useState<{
-    bids: { [playerIndex: number]: string }
-    tricks: { [playerIndex: number]: string }
-  }>({
-    bids: {},
-    tricks: {},
-  })
+  const [roundInputs, setRoundInputs] = useState(() =>
+    gameState.players.map(() => ({ bid: "", tricks: "" }))
+  );
 
   const maxCards = Math.floor((52 * gameState.deckCount) / gameState.players.length)
 
@@ -50,18 +46,13 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
   const currentTrump = getCurrentTrumpSuit(gameState.currentRound)
   const currentTrumpSuit = TRUMP_SUITS.find((suit) => suit.value === currentTrump)!
 
-  const updateBid = (playerIndex: number, bid: string) => {
-    setCurrentRoundData((prev) => ({
-      ...prev,
-      bids: { ...prev.bids, [playerIndex]: bid },
-    }))
-  }
-
-  const updateTricks = (playerIndex: number, tricks: string) => {
-    setCurrentRoundData((prev) => ({
-      ...prev,
-      tricks: { ...prev.tricks, [playerIndex]: tricks },
-    }))
+  const updateRoundInput = (playerIndex: number, field: "bid" | "tricks", value: string) => {
+    const newInputs = [...roundInputs];
+    // Allow only numeric input, but allow empty string to clear the field
+    if (/^\d*$/.test(value)) {
+      newInputs[playerIndex] = { ...newInputs[playerIndex], [field]: value };
+      setRoundInputs(newInputs);
+    }
   }
 
   const calculateScore = (bid: number, tricks: number): number => {
@@ -76,7 +67,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
       if (bid === 1 && tricks !== 1) { // Note: this condition is met since bid !== tricks
         return -11;
       }
-      if (bid === 0 && tricks === 1) { // Note: this condition is met since bid !== tricks
+      if (bid === 0 && tricks > 0) {
         return -gameState.zeroBidPoints;
       }
     }
@@ -84,10 +75,24 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
     return 0; // Default case if bid is not met and no negative rules apply
   }
 
+  const canAddRound = useMemo(() => {
+    return roundInputs.every(input => {
+        const bid = input.bid;
+        const tricks = input.tricks;
+        const bidNum = parseInt(bid, 10);
+        const tricksNum = parseInt(tricks, 10);
+        
+        return bid !== "" && tricks !== "" && !isNaN(bidNum) && !isNaN(tricksNum) && bidNum <= currentCards && tricksNum <= currentCards;
+    });
+  }, [roundInputs, currentCards]);
+
+
   const addRound = () => {
+    if (!canAddRound) return;
+
     const playerScores: KachufulPlayerRound[] = gameState.players.map((_, index) => {
-      const bid = Number(currentRoundData.bids[index] || 0)
-      const tricks = Number(currentRoundData.tricks[index] || 0)
+      const bid = Number(roundInputs[index].bid)
+      const tricks = Number(roundInputs[index].tricks)
       const score = calculateScore(bid, tricks)
       return { bid, tricks, score }
     })
@@ -107,7 +112,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
 
     const gameEnded = gameState.currentRound >= gameState.maxRounds
     const winner = gameEnded
-      ? updatedPlayers.reduce((max, player) => (player.totalScore > max.totalScore ? player : max))
+      ? updatedPlayers.reduce((max, player) => (player.totalScore > max.totalScore ? player : max), updatedPlayers[0])
       : undefined
 
     const updatedGameState: KachufulGameState = {
@@ -120,16 +125,9 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
     }
 
     onGameUpdate(updatedGameState)
-    setCurrentRoundData({ bids: {}, tricks: {} })
+    // Reset inputs for the next round
+    setRoundInputs(gameState.players.map(() => ({ bid: "", tricks: "" })))
   }
-
-  const canAddRound = useMemo(() => {
-    return gameState.players.every((_, index) => {
-      const bid = currentRoundData.bids[index];
-      const trick = currentRoundData.tricks[index];
-      return bid !== undefined && bid !== '' && trick !== undefined && trick !== '';
-    });
-  }, [currentRoundData.bids, currentRoundData.tricks, gameState.players]);
 
 
   const chartData = useMemo(() => {
@@ -236,11 +234,12 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-slate-400">Bid:</span>
                         <Input
-                          type="number"
+                          type="text"
+                          pattern="[0-9]*"
                           min="0"
                           max={currentCards}
-                          value={currentRoundData.bids[index] ?? ""}
-                          onChange={(e) => updateBid(index, e.target.value)}
+                          value={roundInputs[index]?.bid ?? ""}
+                          onChange={(e) => updateRoundInput(index, "bid", e.target.value)}
                           className="w-16 text-center bg-slate-600/50 border-slate-500 text-white"
                           placeholder="0"
                         />
@@ -248,11 +247,12 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-slate-400">Tricks:</span>
                         <Input
-                          type="number"
+                          type="text"
+                          pattern="[0-9]*"
                           min="0"
                           max={currentCards}
-                          value={currentRoundData.tricks[index] ?? ""}
-                          onChange={(e) => updateTricks(index, e.target.value)}
+                          value={roundInputs[index]?.tricks ?? ""}
+                          onChange={(e) => updateRoundInput(index, "tricks", e.target.value)}
                           className="w-16 text-center bg-slate-600/50 border-slate-500 text-white"
                           placeholder="0"
                         />
