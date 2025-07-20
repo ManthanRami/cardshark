@@ -116,14 +116,14 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
   if (gameState.gameEnded && gameState.winner) {
     return (
       <div className="text-center space-y-8 max-w-4xl mx-auto animate-fade-in-scale">
-        <Card className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 border-yellow-500/30">
+        <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30">
           <CardContent className="p-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Trophy className="h-8 w-8 text-yellow-400 animate-pulse-glow" />
-              <span className="text-3xl font-bold text-yellow-400">Game Complete!</span>
-              <Crown className="h-6 w-6 text-yellow-400" />
+              <Trophy className="h-8 w-8 text-purple-400 animate-pulse-glow" />
+              <span className="text-3xl font-bold text-purple-400">Game Complete!</span>
+              <Crown className="h-6 w-6 text-purple-400" />
             </div>
-            <p className="text-xl text-yellow-200">
+            <p className="text-xl text-purple-200">
               <strong>{gameState.winner.name}</strong> wins with {gameState.winner.totalScore} points!
             </p>
           </CardContent>
@@ -140,12 +140,12 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
                 .map((player, index) => (
                   <Card
                     key={player.name}
-                    className={`${index === 0 ? "bg-gradient-to-r from-yellow-900/30 to-amber-900/30 border-yellow-500/30" : "bg-slate-700/30 border-slate-600/50"}`}
+                    className={`${index === 0 ? "bg-gradient-to-r from-purple-900/30 to-blue-900/30 border-purple-500/30" : "bg-slate-700/30 border-slate-600/50"}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                          {index === 0 && <Trophy className="h-5 w-5 text-yellow-400" />}
+                          {index === 0 && <Trophy className="h-5 w-5 text-purple-400" />}
                           <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
                             {index + 1}
                           </div>
@@ -153,7 +153,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
                         </div>
                         <Badge
                           variant={index === 0 ? "default" : "secondary"}
-                          className={`${index === 0 ? "bg-yellow-500 text-black" : "bg-slate-600 text-white"} px-3 py-1`}
+                          className={`${index === 0 ? "bg-purple-500 text-white" : "bg-slate-600 text-white"} px-3 py-1`}
                         >
                           {player.totalScore} pts
                         </Badge>

@@ -170,7 +170,7 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center group">
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Trophy className="w-8 h-8 text-white" />
               </div>
               <h4 className="font-bold text-white mb-3 text-lg">Game Night Ready</h4>
