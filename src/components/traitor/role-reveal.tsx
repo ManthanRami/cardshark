@@ -81,6 +81,11 @@ export function RoleReveal({ player, playerIndex, totalPlayers, onNext }: RoleRe
     setRoleRevealed(false)
   }
 
+  const handleNextClick = () => {
+    setRoleRevealed(false)
+    onNext()
+  }
+
   const roleInfo = ROLE_INFO[player.role]
   const RoleIcon = roleInfo.icon
 
@@ -159,7 +164,7 @@ export function RoleReveal({ player, playerIndex, totalPlayers, onNext }: RoleRe
 
           <div className="text-center pt-4">
             <Button
-              onClick={onNext}
+              onClick={handleNextClick}
               size="lg"
               className="bg-gradient-to-r from-purple-600 to-blue-700 hover:opacity-90 text-white py-4 px-8 rounded-xl transition-all duration-200"
             >
