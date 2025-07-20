@@ -6,7 +6,7 @@ export interface TraitorPlayer {
   role: TraitorRole
   isAlive: boolean
   isProtected: boolean
-  eliminatedBy?: "vote" | "kill"
+  eliminationReason?: "vote" | "kill"
   eliminatedRound?: number
 }
 

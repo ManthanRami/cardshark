@@ -71,13 +71,16 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
   const townPlayers = alivePlayers.filter((p) => p.role !== "mafia")
   const doctorPlayer = alivePlayers.find((p) => p.role === "doctor")
   const detectivePlayer = alivePlayers.find((p) => p.role === "detective")
+  const hasDetective = gameState.roleConfig.detective > 0
 
   const checkWinCondition = (players: TraitorPlayer[]): "mafia" | "town" | null => {
     const aliveMafia = players.filter((p) => p.isAlive && p.role === "mafia").length
     const aliveTown = players.filter((p) => p.isAlive && p.role !== "mafia").length
+    const aliveDetectives = players.filter(p => p.isAlive && p.role === 'detective').length;
 
     if (aliveMafia === 0) return "town"
     if (aliveMafia >= aliveTown) return "mafia"
+    if (hasDetective && aliveDetectives === 0) return "mafia";
     return null
   }
 
