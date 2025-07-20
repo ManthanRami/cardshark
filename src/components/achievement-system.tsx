@@ -135,15 +135,15 @@ export function AchievementSystem({ gameType, playerStats }: AchievementSystemPr
           className="fixed top-4 right-4 z-50 animate-slide-in-down"
           style={{ animationDelay: `${index * 0.2}s` }}
         >
-          <Card className="md-elevation-8 border-0 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950 achievement-badge">
+          <Card className="md-elevation-8 border-0 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 achievement-badge">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full flex items-center justify-center text-white">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white">
                   {achievement.icon}
                 </div>
                 <div>
-                  <p className="md-subtitle-2 font-medium text-amber-800 dark:text-amber-200">Achievement Unlocked!</p>
-                  <p className="md-body-2 text-amber-700 dark:text-amber-300">{achievement.title}</p>
+                  <p className="md-subtitle-2 font-medium text-green-800 dark:text-green-200">Achievement Unlocked!</p>
+                  <p className="md-body-2 text-green-700 dark:text-green-300">{achievement.title}</p>
                 </div>
               </div>
             </CardContent>

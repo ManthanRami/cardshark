@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, GripVertical, X, Info, Users, Eye, Shield, UserX, Heart } from "lucide-react"
+import { Plus, GripVertical, X, Info, Users, Eye, Shield, UserX, Heart, Ghost } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { TraitorGameState, TraitorRole } from "@/types/traitor"
 
@@ -96,7 +96,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
         role: roles[index],
         isAlive: true,
         isProtected: false,
-        eliminatedBy: undefined,
+        eliminationReason: undefined,
         eliminatedRound: undefined,
       })),
       rounds: [],
@@ -105,29 +105,31 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
       gameEnded: false,
       winner: null,
       roleConfig,
-      gameStarted: false,
+      gameStarted: true,
+      nightActions: {},
     }
 
     onGameStart(gameState)
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card className="md-elevation-4 border-0 bg-white dark:bg-slate-800">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-red-600 to-red-800 rounded-full flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
+    <div className="max-w-4xl mx-auto animate-fade-in-scale">
+      <Card className="bg-slate-800/50 border-slate-700/50 backdrop-blur-sm">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-700 to-indigo-900 rounded-xl flex items-center justify-center">
+              <Ghost className="w-6 h-6 text-white" />
             </div>
-            <CardTitle className="md-headline-5 text-slate-800 dark:text-slate-100 font-medium">
-              Traitor Game Setup
-            </CardTitle>
+            <div>
+              <CardTitle className="text-2xl font-bold text-white">Traitor Game Setup</CardTitle>
+              <p className="text-slate-400">Configure your social deduction game</p>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-8">
-          <Alert className="border-blue-500/20 bg-blue-50/50 dark:bg-blue-950/20 md-elevation-1">
-            <Info className="h-5 w-5 text-blue-600" />
-            <AlertDescription className="md-body-2 text-blue-800 dark:text-blue-200">
+          <Alert className="border-blue-500/20 bg-blue-950/20">
+            <Info className="h-5 w-5 text-blue-400" />
+            <AlertDescription className="text-blue-200">
               <strong>Traitor Rules:</strong> Mafia members try to eliminate all other players. Town (Detective + Doctor
               + Civilians) wins by eliminating all Mafia. Detective can investigate one player each night. Doctor can
               protect one player each night. Game alternates between Day (discussion), Voting (eliminate someone), and
@@ -137,7 +139,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
             <div className="space-y-2">
-              <Label className="md-subtitle-2 text-slate-700 dark:text-slate-300">Total Players</Label>
+              <Label className="font-medium text-slate-300">Total Players</Label>
               <Select
                 value={playerCount.toString()}
                 onValueChange={(value) => {
@@ -157,12 +159,12 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
                   }
                 }}
               >
-                <SelectTrigger className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="md-elevation-8">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Array.from({ length: 16 }, (_, i) => i + 5).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
                       {num} Players
                     </SelectItem>
                   ))}
@@ -171,20 +173,20 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="md-subtitle-2 text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <UserX className="w-4 h-4 text-red-500" />
+              <Label className="font-medium text-slate-300 flex items-center gap-2">
+                <UserX className="w-4 h-4 text-red-400" />
                 Mafia
               </Label>
               <Select
                 value={roleConfig.mafia.toString()}
                 onValueChange={(value) => updateRoleCount("mafia", Number.parseInt(value))}
               >
-                <SelectTrigger className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="md-elevation-8">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Array.from({ length: Math.floor(players.length / 2) }, (_, i) => i + 1).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
                       {num}
                     </SelectItem>
                   ))}
@@ -193,20 +195,20 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="md-subtitle-2 text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-500" />
+              <Label className="font-medium text-slate-300 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-blue-400" />
                 Detective
               </Label>
               <Select
                 value={roleConfig.detective.toString()}
                 onValueChange={(value) => updateRoleCount("detective", Number.parseInt(value))}
               >
-                <SelectTrigger className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="md-elevation-8">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Array.from({ length: 3 }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
                       {num}
                     </SelectItem>
                   ))}
@@ -215,20 +217,20 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="md-subtitle-2 text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Heart className="w-4 h-4 text-green-500" />
+              <Label className="font-medium text-slate-300 flex items-center gap-2">
+                <Heart className="w-4 h-4 text-green-400" />
                 Doctor
               </Label>
               <Select
                 value={roleConfig.doctor.toString()}
                 onValueChange={(value) => updateRoleCount("doctor", Number.parseInt(value))}
               >
-                <SelectTrigger className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="md-elevation-8">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Array.from({ length: 3 }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
                       {num}
                     </SelectItem>
                   ))}
@@ -237,20 +239,20 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             </div>
 
             <div className="space-y-2">
-              <Label className="md-subtitle-2 text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                <Eye className="w-4 h-4 text-gray-500" />
+              <Label className="font-medium text-slate-300 flex items-center gap-2">
+                <Users className="w-4 h-4 text-slate-400" />
                 Civilian
               </Label>
               <Select
                 value={roleConfig.civilian.toString()}
                 onValueChange={(value) => updateRoleCount("civilian", Number.parseInt(value))}
               >
-                <SelectTrigger className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="md-elevation-8">
+                <SelectContent className="bg-slate-800 border-slate-600">
                   {Array.from({ length: players.length }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()}>
+                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
                       {num}
                     </SelectItem>
                   ))}
@@ -260,48 +262,48 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
           </div>
 
           <Card
-            className={`border-0 md-elevation-1 ${
+            className={`border-0 ${
               isValidConfig
-                ? "bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950"
-                : "bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-950 dark:to-orange-950"
+                ? "bg-gradient-to-r from-green-900/30 to-blue-900/30 border-green-500/30"
+                : "bg-gradient-to-r from-red-900/30 to-orange-900/30 border-red-500/30"
             }`}
           >
             <CardContent className="p-6">
-              <h3 className="md-subtitle-1 font-medium text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${isValidConfig ? "bg-green-500" : "bg-red-500"}`}></div>
+              <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${isValidConfig ? "bg-green-400" : "bg-red-400"}`}></div>
                 Role Configuration Summary
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md-body-2 text-slate-600 dark:text-slate-400">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
                 <div className="flex items-center gap-2">
-                  <UserX className="w-4 h-4 text-red-500" />
+                  <UserX className="w-4 h-4 text-red-400" />
                   <span>{roleConfig.mafia} Mafia members</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-500" />
+                  <Shield className="w-4 h-4 text-blue-400" />
                   <span>
                     {roleConfig.detective} Detective{roleConfig.detective !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-green-500" />
+                  <Heart className="w-4 h-4 text-green-400" />
                   <span>
                     {roleConfig.doctor} Doctor{roleConfig.doctor !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Eye className="w-4 h-4 text-gray-500" />
+                  <Users className="w-4 h-4 text-slate-400" />
                   <span>
                     {roleConfig.civilian} Civilian{roleConfig.civilian !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 md:col-span-2">
-                  <Users className="w-4 h-4 text-slate-600" />
+                  <Users className="w-4 h-4" />
                   <span>Total: {totalRoles} players</span>
                 </div>
               </div>
               {!isValidConfig && (
-                <Alert className="mt-4 border-red-500/20 bg-red-50/50 dark:bg-red-950/20">
-                  <AlertDescription className="text-red-800 dark:text-red-200 text-sm">
+                <Alert className="mt-4 border-red-500/20 bg-red-950/20">
+                  <AlertDescription className="text-red-200 text-sm">
                     {totalRoles !== players.length &&
                       `Role count (${totalRoles}) must equal player count (${players.length}). `}
                     {roleConfig.mafia >= players.length / 2 && "Mafia cannot be half or more of total players. "}
@@ -314,13 +316,13 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <Label className="md-subtitle-1 font-medium text-slate-700 dark:text-slate-300">Player Names</Label>
+              <Label className="text-slate-300 font-medium text-lg">Player Names</Label>
               <Button
                 onClick={addPlayer}
                 disabled={players.length >= 20}
                 size="sm"
                 variant="outline"
-                className="md-button md-ripple md-elevation-1 hover:md-elevation-2"
+                className="bg-transparent border-slate-600 text-slate-300 hover:bg-slate-700/50"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Player
@@ -329,7 +331,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
             <div className="space-y-3">
               {players.map((player, index) => (
-                <Card key={index} className="md-elevation-1 border-0 bg-slate-50 dark:bg-slate-700">
+                <Card key={index} className="bg-slate-700/30 border-slate-600/50">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col gap-1">
@@ -338,7 +340,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
                           size="sm"
                           onClick={() => movePlayer(index, "up")}
                           disabled={index === 0}
-                          className="h-6 w-6 p-0 hover:bg-slate-200 dark:hover:bg-slate-600"
+                          className="h-6 w-6 p-0 hover:bg-slate-600/50 text-slate-400"
                         >
                           <GripVertical className="h-3 w-3" />
                         </Button>
@@ -347,26 +349,26 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
                           size="sm"
                           onClick={() => movePlayer(index, "down")}
                           disabled={index === players.length - 1}
-                          className="h-6 w-6 p-0 hover:bg-slate-200 dark:hover:bg-slate-600"
+                          className="h-6 w-6 p-0 hover:bg-slate-600/50 text-slate-400"
                         >
                           <GripVertical className="h-3 w-3" />
                         </Button>
                       </div>
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
                         {index + 1}
                       </div>
                       <Input
                         value={player}
                         onChange={(e) => updatePlayerName(index, e.target.value)}
                         placeholder={`Player ${index + 1}`}
-                        className="flex-1 border-0 bg-white dark:bg-slate-600 md-elevation-1"
+                        className="flex-1 bg-slate-600/50 border-slate-500 text-white placeholder:text-slate-400"
                       />
                       <Button
                         onClick={() => removePlayer(index)}
                         disabled={players.length <= 5}
                         size="sm"
                         variant="outline"
-                        className="md-ripple hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                        className="bg-transparent border-slate-600 text-slate-400 hover:bg-red-900/20 hover:border-red-500/50 hover:text-red-400"
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -380,9 +382,9 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
           <Button
             onClick={startGame}
             disabled={!isValidConfig}
-            className="w-full md-button bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white py-4 rounded-xl md-ripple md-elevation-2 hover:md-elevation-4 transition-all duration-200"
+            className="w-full bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            <Users className="w-5 h-5 mr-2" />
+            <Ghost className="w-5 h-5 mr-2" />
             Start Traitor Game
           </Button>
         </CardContent>

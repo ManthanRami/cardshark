@@ -20,7 +20,7 @@ export function RaceToVictoryChart({ data }: RaceToVictoryChartProps) {
     <Card className="bg-slate-800/50 border-slate-700/50">
       <CardHeader>
         <CardTitle className="text-white flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-yellow-400" />
+          <Trophy className="w-5 h-5 text-purple-400" />
           Race to Victory
         </CardTitle>
       </CardHeader>
@@ -37,14 +37,14 @@ export function RaceToVictoryChart({ data }: RaceToVictoryChartProps) {
                     <div
                       className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white ${
                         isLeader
-                          ? "bg-gradient-to-r from-yellow-500 to-amber-600"
-                          : "bg-gradient-to-r from-purple-500 to-blue-600"
+                          ? "bg-gradient-to-r from-purple-500 to-blue-600"
+                          : "bg-gradient-to-r from-slate-500 to-slate-600"
                       }`}
                     >
                       {index + 1}
                     </div>
                     <span className="font-medium text-white">{player.name}</span>
-                    {isLeader && <Trophy className="w-4 h-4 text-yellow-400" />}
+                    {isLeader && <Trophy className="w-4 h-4 text-purple-400" />}
                   </div>
                   <span className="font-bold text-white">{player.score}</span>
                 </div>
@@ -52,8 +52,8 @@ export function RaceToVictoryChart({ data }: RaceToVictoryChartProps) {
                   <div
                     className={`h-full rounded-full transition-all duration-1000 ease-out ${
                       isLeader
-                        ? "bg-gradient-to-r from-yellow-500 to-amber-600"
-                        : "bg-gradient-to-r from-purple-500 to-blue-600"
+                        ? "bg-gradient-to-r from-purple-500 to-blue-600"
+                        : "bg-gradient-to-r from-slate-500 to-slate-600"
                     }`}
                     style={{ width: `${Math.max(percentage, 2)}%` }}
                   />

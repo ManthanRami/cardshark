@@ -137,16 +137,16 @@ export function AdBanner({
     <Card className={cn("overflow-hidden bg-slate-800/50 border-slate-700/50", className)}>
       <div className="relative">
         {adError && (
-          <Alert className="m-4 border-amber-200/20 bg-amber-950/20">
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
-            <AlertDescription className="text-amber-200">
+          <Alert className="m-4 border-red-500/20 bg-red-950/20">
+            <AlertTriangle className="h-4 w-4 text-red-400" />
+            <AlertDescription className="text-red-200">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Unable to load advertisement</span>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={retryAd}
-                  className="ml-2 h-7 px-2 text-xs border-amber-400/30 text-amber-300 hover:bg-amber-900/20 bg-transparent"
+                  className="ml-2 h-7 px-2 text-xs border-slate-600 text-slate-300 hover:bg-slate-700/50 bg-transparent"
                 >
                   <RefreshCw className="h-3 w-3 mr-1" />
                   Retry

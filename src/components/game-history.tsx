@@ -185,7 +185,7 @@ export function GameHistory() {
                             <span className="md-caption text-slate-500">{formatDate(game.date)}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Trophy className="w-4 h-4 text-amber-500" />
+                            <Trophy className="w-4 h-4 text-purple-400" />
                             <span className="md-body-2 font-medium text-slate-800 dark:text-slate-100">
                               {game.winner}
                             </span>
@@ -197,7 +197,7 @@ export function GameHistory() {
                               key={player}
                               className={`p-2 rounded text-center ${
                                 player === game.winner
-                                  ? "bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900 dark:to-yellow-900"
+                                  ? "bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900 dark:to-blue-900"
                                   : "bg-white dark:bg-slate-600"
                               }`}
                             >
@@ -235,14 +235,14 @@ export function GameHistory() {
                     key={player.name}
                     className={`md-elevation-2 border-0 leaderboard-entry ${
                       index === 0
-                        ? "bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950"
+                        ? "bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950"
                         : "bg-slate-50 dark:bg-slate-700"
                     }`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
-                          {index === 0 && <Trophy className="w-5 h-5 text-amber-500" />}
+                          {index === 0 && <Trophy className="w-5 h-5 text-purple-400" />}
                           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
                             {index + 1}
                           </div>
@@ -252,7 +252,7 @@ export function GameHistory() {
                         </div>
                         <Badge
                           className={`${
-                            index === 0 ? "bg-amber-500 text-white" : "bg-blue-500 text-white"
+                            index === 0 ? "bg-purple-500 text-white" : "bg-blue-500 text-white"
                           } md-caption px-3 py-1`}
                         >
                           {player.winRate.toFixed(1)}% Win Rate

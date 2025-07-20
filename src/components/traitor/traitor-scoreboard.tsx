@@ -1,418 +1,372 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Shield, Zap, Users, Moon, Sun, Vote, RotateCcw, Trophy } from "lucide-react"
+import { Eye, Shield, UserX, Users, Moon, Sun, Vote, RotateCcw, Trophy, Heart } from "lucide-react"
 import { CelebrationEffects } from "@/components/celebration-effects"
 import type { TraitorGameState, TraitorPlayer } from "@/types/traitor"
 
 interface TraitorScoreboardProps {
+  onNewGame: () => void
+  onGameUpdate: (state: TraitorGameState) => void
   gameState: TraitorGameState
-  onUpdateGameState: (newState: TraitorGameState) => void
-  onRestart: () => void
 }
 
-const roleIcons = {
-  mafia: Zap,
-  detective: Eye,
-  doctor: Shield,
-  civilian: Users,
+const roleInfo = {
+  mafia: {
+    icon: UserX,
+    color: "bg-red-800/80",
+    borderColor: "border-red-500/30",
+    textColor: "text-red-300",
+  },
+  detective: {
+    icon: Eye,
+    color: "bg-blue-800/80",
+    borderColor: "border-blue-500/30",
+    textColor: "text-blue-300",
+  },
+  doctor: {
+    icon: Heart,
+    color: "bg-green-800/80",
+    borderColor: "border-green-500/30",
+    textColor: "text-green-300",
+  },
+  civilian: {
+    icon: Users,
+    color: "bg-slate-700/80",
+    borderColor: "border-slate-500/30",
+    textColor: "text-slate-300",
+  },
 }
 
-const roleColors = {
-  mafia: "bg-red-500",
-  detective: "bg-blue-500",
-  doctor: "bg-green-500",
-  civilian: "bg-gray-500",
-}
-
-export function TraitorScoreboard({ gameState, onUpdateGameState, onRestart }: TraitorScoreboardProps) {
-  /* ------------------------------------------------------------------ */
-  /* State                                                               */
-  /* ------------------------------------------------------------------ */
-  const [showRoles, setShowRoles] = useState(true)
-  const [mafiaTarget, setMafiaTarget] = useState<string>("")
-  const [doctorProtection, setDoctorProtection] = useState<string>("")
-  const [detectiveInvestigation, setDetectiveInvestigation] = useState<string>("")
+export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: TraitorScoreboardProps) {
+  const [showRoles, setShowRoles] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
 
-  /* ------------------------------------------------------------------ */
-  /* Safe defaults for first render                                      */
-  /* ------------------------------------------------------------------ */
-  const phase: "day" | "voting" | "night" = gameState.phase ?? "day"
-  const round: number = gameState.round ?? 1
-  const nightActions = gameState.nightActions ?? {}
-  /* ------------------------------------------------------------------ */
+  // Night Actions State
+  const [mafiaTarget, setMafiaTarget] = useState<string | null>(null)
+  const [doctorSave, setDoctorSave] = useState<string | null>(null)
+  const [detectiveCheck, setDetectiveCheck] = useState<string | null>(null)
+  const [lastInvestigation, setLastInvestigation] = useState<{ player: string; role: string } | null>(null)
 
-  /* ------------------------------------------------------------------ */
-  /* Helpers                                                             */
-  /* ------------------------------------------------------------------ */
   const alivePlayers = gameState.players.filter((p) => p.isAlive)
-  const mafiaCount = alivePlayers.filter((p) => p.role === "mafia").length
-  const townCount = alivePlayers.filter((p) => p.role !== "mafia").length
+  const mafiaPlayers = alivePlayers.filter((p) => p.role === "mafia")
+  const townPlayers = alivePlayers.filter((p) => p.role !== "mafia")
+  const doctorPlayer = alivePlayers.find((p) => p.role === "doctor")
+  const detectivePlayer = alivePlayers.find((p) => p.role === "detective")
 
   const checkWinCondition = (players: TraitorPlayer[]): "mafia" | "town" | null => {
-    const alive = players.filter((p) => p.isAlive)
-    const aliveMafia = alive.filter((p) => p.role === "mafia").length
-    const aliveTown = alive.filter((p) => p.role !== "mafia").length
+    const aliveMafia = players.filter((p) => p.isAlive && p.role === "mafia").length
+    const aliveTown = players.filter((p) => p.isAlive && p.role !== "mafia").length
 
     if (aliveMafia === 0) return "town"
     if (aliveMafia >= aliveTown) return "mafia"
     return null
   }
 
-  const eliminatePlayer = (playerId: string, reason: "voted" | "mafia") => {
+  const handleElimination = (playerId: string) => {
     const newPlayers = gameState.players.map((p) =>
-      p.id === playerId ? { ...p, isAlive: false, eliminationReason: reason, isProtected: false } : p,
+      p.id === playerId ? { ...p, isAlive: false, eliminatedRound: gameState.currentRound } : p,
     )
-
     const winner = checkWinCondition(newPlayers)
-    const newState = { ...gameState, players: newPlayers, winner }
-
+    onGameUpdate({ ...gameState, players: newPlayers, winner, currentPhase: "night" })
     if (winner) setShowCelebration(true)
-    onUpdateGameState(newState)
   }
 
-  const advancePhase = () => {
-    let newPhase: "day" | "voting" | "night"
-    let newRound = round
-
-    if (phase === "day") newPhase = "voting"
-    else if (phase === "voting") newPhase = "night"
-    else {
-      newPhase = "day"
-      newRound += 1
+  const handleNightEnd = () => {
+    let eliminatedPlayerId: string | null = null
+    if (mafiaTarget && mafiaTarget !== doctorSave) {
+      eliminatedPlayerId = mafiaTarget
     }
 
-    onUpdateGameState({
-      ...gameState,
-      phase: newPhase,
-      round: newRound,
-      nightActions: {},
+    const newPlayers = gameState.players.map((p) => {
+      if (p.id === eliminatedPlayerId) {
+        return { ...p, isAlive: false, eliminatedRound: gameState.currentRound }
+      }
+      return p
     })
-  }
 
-  const executeNightActions = () => {
-    let newPlayers = [...gameState.players]
-
-    // Reset protection
-    newPlayers = newPlayers.map((p) => ({ ...p, isProtected: false }))
-
-    // Doctor protection
-    if (doctorProtection) {
-      newPlayers = newPlayers.map((p) => (p.id === doctorProtection ? { ...p, isProtected: true } : p))
-    }
-
-    // Mafia elimination
-    if (mafiaTarget) {
-      const target = newPlayers.find((p) => p.id === mafiaTarget)
-      if (target && !target.isProtected) {
-        newPlayers = newPlayers.map((p) =>
-          p.id === mafiaTarget ? { ...p, isAlive: false, eliminationReason: "mafia" as const } : p,
-        )
-      }
-    }
-
-    // Detective investigation
-    let investigationResult
-    if (detectiveInvestigation) {
-      const target = newPlayers.find((p) => p.id === detectiveInvestigation)
+    if (detectiveCheck) {
+      const target = newPlayers.find((p) => p.id === detectiveCheck)
       if (target) {
-        investigationResult = {
-          playerId: target.id,
-          role: target.role,
-        }
+        setLastInvestigation({ player: target.name, role: target.role })
       }
+    } else {
+      setLastInvestigation(null)
     }
 
     const winner = checkWinCondition(newPlayers)
-    if (winner) setShowCelebration(true)
-
-    onUpdateGameState({
+    onGameUpdate({
       ...gameState,
       players: newPlayers,
       winner,
-      nightActions: {
-        mafiaTarget,
-        doctorProtection,
-        detectiveInvestigation,
-        investigationResult,
-      },
+      currentPhase: "day",
+      currentRound: gameState.currentRound + 1,
     })
+    if (winner) setShowCelebration(true)
 
-    // Reset selections
-    setMafiaTarget("")
-    setDoctorProtection("")
-    setDetectiveInvestigation("")
+    // Reset night actions
+    setMafiaTarget(null)
+    setDoctorSave(null)
+    setDetectiveCheck(null)
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Game finished screen                                                */
-  /* ------------------------------------------------------------------ */
   if (gameState.winner) {
     return (
-      <div className="mx-auto max-w-4xl p-6">
+      <div className="text-center space-y-8 max-w-4xl mx-auto animate-fade-in-scale">
         {showCelebration && (
           <CelebrationEffects
-            message={`${gameState.winner === "mafia" ? "Mafia" : "Town"} Wins!`}
+            trigger={showCelebration}
             onComplete={() => setShowCelebration(false)}
           />
         )}
-
-        <Card>
-          <CardContent className="space-y-6 p-8 text-center">
-            <Trophy className="mx-auto h-16 w-16 text-yellow-500" />
-            <h2 className="text-3xl font-bold">{gameState.winner === "mafia" ? "Mafia" : "Town"} Wins!</h2>
-
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Final Roles:</h3>
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {gameState.players.map((player) => {
-                  const RoleIcon = roleIcons[player.role]
-                  return (
-                    <div key={player.id} className="space-y-2 text-center">
-                      <div
-                        className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full ${roleColors[player.role]}`}
-                      >
-                        <RoleIcon className="h-6 w-6 text-white" />
-                      </div>
-                      <p className="font-medium">{player.name}</p>
-                      <Badge variant={player.isAlive ? "default" : "secondary"}>{player.role}</Badge>
-                    </div>
-                  )
-                })}
-              </div>
+        <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30">
+          <CardContent className="p-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Trophy className="h-8 w-8 text-purple-400 animate-pulse-glow" />
+              <span className="text-3xl font-bold text-purple-400">
+                {gameState.winner === "mafia" ? "Mafia Wins!" : "Town Wins!"}
+              </span>
             </div>
-
-            <Button onClick={onRestart} size="lg">
-              <RotateCcw className="mr-2 h-4 w-4" />
-              Play Again
-            </Button>
+            <p className="text-xl text-purple-200">The game has ended.</p>
           </CardContent>
         </Card>
+
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardHeader>
+            <CardTitle className="text-white text-center">Final Roles</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {gameState.players.map((player) => {
+                const info = roleInfo[player.role]
+                const RoleIcon = info.icon
+                return (
+                  <Card key={player.id} className={`p-4 text-center ${info.color} ${info.borderColor}`}>
+                    <RoleIcon className={`w-8 h-8 mx-auto mb-2 ${info.textColor}`} />
+                    <p className={`font-bold ${!player.isAlive ? "line-through" : ""}`}>{player.name}</p>
+                    <p className="text-xs capitalize text-slate-300">{player.role}</p>
+                  </Card>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+        <Button onClick={onNewGame} className="mt-6">
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Play Again
+        </Button>
       </div>
     )
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Main scoreboard                                                     */
-  /* ------------------------------------------------------------------ */
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6">
-      {/* Game Status */}
-      <Card>
+    <div className="space-y-6">
+      <Card className="bg-slate-800/50 border-slate-700/50">
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              {phase === "day" && <Sun className="h-5 w-5 text-yellow-500" />}
-              {phase === "voting" && <Vote className="h-5 w-5 text-blue-500" />}
-              {phase === "night" && <Moon className="h-5 w-5 text-purple-500" />}
-              {`Round ${round} – ${phase.charAt(0).toUpperCase() + phase.slice(1)}`}
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-white flex items-center gap-3">
+              {gameState.currentPhase === "day" ? (
+                <Sun className="h-6 w-6 text-yellow-400" />
+              ) : (
+                <Moon className="h-6 w-6 text-purple-400" />
+              )}
+              <span>
+                Round {gameState.currentRound} - {gameState.currentPhase === "day" ? "Day Phase" : "Night Phase"}
+              </span>
             </CardTitle>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="show-roles">Show Roles</Label>
-                <Switch id="show-roles" checked={showRoles} onCheckedChange={setShowRoles} />
-              </div>
-              <Button variant="outline" onClick={onRestart}>
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Restart
-              </Button>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="show-roles" className="text-sm text-slate-300">
+                Show Roles
+              </Label>
+              <Switch id="show-roles" checked={showRoles} onCheckedChange={setShowRoles} />
             </div>
           </div>
+          <CardDescription className="text-slate-400 pt-2">
+            {mafiaPlayers.length} Mafia vs. {townPlayers.length} Town members remain.
+          </CardDescription>
         </CardHeader>
-
-        <CardContent>
-          <div className="flex gap-6 text-center">
-            <div>
-              <p className="text-2xl font-bold text-red-500">{mafiaCount}</p>
-              <p className="text-sm text-muted-foreground">Mafia Alive</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-500">{townCount}</p>
-              <p className="text-sm text-muted-foreground">Town Alive</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{alivePlayers.length}</p>
-              <p className="text-sm text-muted-foreground">Total Alive</p>
-            </div>
-          </div>
-        </CardContent>
       </Card>
 
-      {/* Players */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Players</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {gameState.players.map((player) => {
-              const RoleIcon = roleIcons[player.role]
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Player List */}
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardHeader>
+            <CardTitle className="text-white">Players</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {alivePlayers.map((player) => {
+              const info = roleInfo[player.role]
+              const RoleIcon = info.icon
               return (
-                <div
+                <Card
                   key={player.id}
-                  className={`rounded-lg border p-4 ${
-                    player.isAlive ? "bg-card" : "bg-muted opacity-60"
-                  } ${player.isProtected ? "ring-2 ring-green-500" : ""}`}
+                  className={`p-4 flex items-center justify-between transition-all ${info.color} ${info.borderColor} ${
+                    gameState.currentPhase === "day"
+                      ? "hover:bg-slate-700/50 cursor-pointer"
+                      : "cursor-default"
+                  }`}
+                  onClick={() => gameState.currentPhase === "day" && handleElimination(player.id)}
                 >
                   <div className="flex items-center gap-3">
-                    {showRoles && (
-                      <div
-                        className={`flex h-8 w-8 items-center justify-center rounded-full ${roleColors[player.role]}`}
-                      >
-                        <RoleIcon className="h-4 w-4 text-white" />
-                      </div>
+                    {showRoles ? (
+                      <RoleIcon className={`w-5 h-5 ${info.textColor}`} />
+                    ) : (
+                      <div className="w-5 h-5 bg-slate-600 rounded-full" />
                     )}
-
-                    <div className="flex-1">
-                      <p className="font-medium">{player.name}</p>
-                      <div className="mt-1 flex gap-2">
-                        <Badge variant={player.isAlive ? "default" : "secondary"}>
-                          {player.isAlive ? "Alive" : "Dead"}
-                        </Badge>
-                        {showRoles && <Badge variant="outline">{player.role}</Badge>}
-                        {player.isProtected && <Badge variant="secondary">Protected</Badge>}
-                      </div>
-                    </div>
-
-                    {player.isAlive && phase === "voting" && (
-                      <Button size="sm" variant="destructive" onClick={() => eliminatePlayer(player.id, "voted")}>
-                        Eliminate
-                      </Button>
-                    )}
+                    <span className="font-medium">{player.name}</span>
                   </div>
-
-                  {player.eliminationReason && (
-                    <p className="mt-2 text-xs text-muted-foreground">Eliminated by: {player.eliminationReason}</p>
+                  {gameState.currentPhase === "day" && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleElimination(player.id)
+                      }}
+                    >
+                      <Vote className="w-4 h-4 mr-2" />
+                      Vote Out
+                    </Button>
                   )}
-                </div>
+                </Card>
               )
             })}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Night Actions */}
-      {phase === "night" && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Night Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Mafia */}
-            {alivePlayers.some((p) => p.role === "mafia") && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-red-500" />
-                  Mafia Target
-                </Label>
-                <Select value={mafiaTarget} onValueChange={setMafiaTarget}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select target to eliminate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {alivePlayers
-                      .filter((p) => p.role !== "mafia")
-                      .map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Doctor */}
-            {alivePlayers.some((p) => p.role === "doctor") && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-green-500" />
-                  Doctor Protection
-                </Label>
-                <Select value={doctorProtection} onValueChange={setDoctorProtection}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select player to protect" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {alivePlayers.map((player) => (
-                      <SelectItem key={player.id} value={player.id}>
-                        {player.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Detective */}
-            {alivePlayers.some((p) => p.role === "detective") && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-blue-500" />
-                  Detective Investigation
-                </Label>
-                <Select value={detectiveInvestigation} onValueChange={setDetectiveInvestigation}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select player to investigate" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {alivePlayers
-                      .filter((p) => p.role !== "detective")
-                      .map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            <Button onClick={executeNightActions} className="w-full">
-              Execute Night Actions
-            </Button>
           </CardContent>
         </Card>
-      )}
 
-      {/* Investigation Result */}
-      {nightActions.investigationResult && (
-        <Card>
+        {/* Actions Panel */}
+        <Card className="bg-slate-800/50 border-slate-700/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-blue-500" />
-              Investigation Result
-            </CardTitle>
+            <CardTitle className="text-white">Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>
-              <strong>
-                {gameState.players.find((p) => p.id === nightActions.investigationResult?.playerId)?.name}
-              </strong>{" "}
-              is a <strong className="capitalize">{nightActions.investigationResult.role}</strong>
-            </p>
+            {gameState.currentPhase === "night" ? (
+              <div className="space-y-6">
+                {mafiaPlayers.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-red-400">
+                      <UserX className="w-4 h-4" /> Mafia's Target
+                    </Label>
+                    <Select onValueChange={setMafiaTarget} value={mafiaTarget || ""}>
+                      <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                        <SelectValue placeholder="Select target..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                        {townPlayers.map((p) => (
+                          <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {doctorPlayer && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-green-400">
+                      <Heart className="w-4 h-4" /> Doctor's Save
+                    </Label>
+                    <Select onValueChange={setDoctorSave} value={doctorSave || ""}>
+                      <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                        <SelectValue placeholder="Select player to save..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                        {alivePlayers.map((p) => (
+                          <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {detectivePlayer && (
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2 text-blue-400">
+                      <Eye className="w-4 h-4" /> Detective's Check
+                    </Label>
+                    <Select onValueChange={setDetectiveCheck} value={detectiveCheck || ""}>
+                      <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                        <SelectValue placeholder="Select player to investigate..." />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                        {alivePlayers
+                          .filter((p) => p.role !== "detective")
+                          .map((p) => (
+                            <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-slate-400">
+                <p>Day phase in progress. Discuss and decide who to vote out.</p>
+                {lastInvestigation && (
+                  <p className="mt-4 text-sm bg-blue-900/50 p-3 rounded-lg border border-blue-500/30">
+                    Last night's investigation: <strong>{lastInvestigation.player}</strong> is a{" "}
+                    <strong>{lastInvestigation.role}</strong>.
+                  </p>
+                )}
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button
+              onClick={
+                gameState.currentPhase === "night"
+                  ? handleNightEnd
+                  : () => onGameUpdate({ ...gameState, currentPhase: "night" })
+              }
+              className="w-full"
+            >
+              {gameState.currentPhase === "night" ? (
+                <>
+                  <Sun className="mr-2 h-4 w-4" /> End Night
+                </>
+              ) : (
+                <>
+                  <Moon className="mr-2 h-4 w-4" /> End Day
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {gameState.players.filter((p) => !p.isAlive).length > 0 && (
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardHeader>
+            <CardTitle className="text-white">Eliminated Players</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-4">
+            {gameState.players
+              .filter((p) => !p.isAlive)
+              .map((player) => (
+                <Badge key={player.id} variant="secondary" className="p-2 text-base">
+                  <span className="line-through">{player.name}</span>
+                  {showRoles && <span className="ml-2 capitalize opacity-70">({player.role})</span>}
+                </Badge>
+              ))}
           </CardContent>
         </Card>
       )}
-
-      {/* Phase Control */}
-      <Card>
-        <CardContent className="p-4">
-          <Button onClick={advancePhase} size="lg" className="w-full">
-            {phase === "day" && "Start Voting Phase"}
-            {phase === "voting" && "Start Night Phase"}
-            {phase === "night" && "Start Next Day"}
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   )
 }
