@@ -113,6 +113,7 @@ export function RoleReveal({ player, playerIndex, totalPlayers, onNext }: RoleRe
             <Button
               onMouseDown={handlePressStart}
               onMouseUp={handlePressEnd}
+              onMouseLeave={handlePressEnd}
               onTouchStart={handlePressStart}
               onTouchEnd={handlePressEnd}
               size="lg"
