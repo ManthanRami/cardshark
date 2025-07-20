@@ -165,7 +165,10 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
             </div>
           </CardContent>
         </Card>
-        <Button onClick={onNewGame} className="mt-6">
+        <Button
+          onClick={onNewGame}
+          className="mt-6 bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white"
+        >
           <RotateCcw className="mr-2 h-4 w-4" />
           Play Again
         </Button>
