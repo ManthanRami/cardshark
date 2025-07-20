@@ -64,11 +64,31 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
     }))
   }
 
+  const calculateScore = (bid: number, tricks: number): number => {
+    if (gameState.negativePointsEnabled) {
+      if (bid === 1 && tricks !== 1) {
+        return -11;
+      }
+      if (bid === 0 && tricks === 1) {
+        return -gameState.zeroBidPoints;
+      }
+    }
+
+    if (bid === tricks) {
+      if (bid === 0) {
+        return gameState.zeroBidPoints;
+      }
+      return 10 + bid;
+    }
+    
+    return 0;
+  }
+
   const addRound = () => {
     const playerScores: KachufulPlayerRound[] = gameState.players.map((_, index) => {
-      const bid = Number(currentRoundData.bids[index]) || 0
-      const tricks = Number(currentRoundData.tricks[index]) || 0
-      const score = bid === tricks ? 10 + bid : 0
+      const bid = Number(currentRoundData.bids[index] ?? 0)
+      const tricks = Number(currentRoundData.tricks[index] ?? 0)
+      const score = calculateScore(bid, tricks)
       return { bid, tricks, score }
     })
 
@@ -304,7 +324,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
                           <td key={roundIndex} className="text-center p-3">
                             <div className="flex flex-col items-center gap-1">
                               <Badge
-                                className={`${round.playerScores[playerIndex].score > 0 ? "bg-green-600" : "bg-slate-600"} text-white text-xs`}
+                                className={`${round.playerScores[playerIndex].score > 0 ? "bg-green-600" : round.playerScores[playerIndex].score < 0 ? "bg-red-600" : "bg-slate-600"} text-white text-xs`}
                               >
                                 {round.playerScores[playerIndex].score}
                               </Badge>

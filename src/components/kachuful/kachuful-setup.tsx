@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, X, GripVertical, Info, Spade } from "lucide-react"
+import { Plus, X, GripVertical, Info, Spade, HelpCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { KachufulGameState } from "@/types/kachuful"
+import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface KachufulSetupProps {
   onGameStart: (gameState: KachufulGameState) => void
@@ -19,6 +21,8 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
   const [playerCount, setPlayerCount] = useState(4)
   const [players, setPlayers] = useState<string[]>(["Player 1", "Player 2", "Player 3", "Player 4"])
   const [deckCount, setDeckCount] = useState(1)
+  const [zeroBidPoints, setZeroBidPoints] = useState(10)
+  const [negativePointsEnabled, setNegativePointsEnabled] = useState(false)
 
   const maxCards = Math.floor((52 * deckCount) / playerCount)
   const totalRounds = maxCards * 2 - 1
@@ -64,6 +68,8 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
       rounds: [],
       deckCount,
       maxRounds: totalRounds,
+      zeroBidPoints,
+      negativePointsEnabled,
     }
     onGameStart(gameState)
   }
@@ -87,9 +93,8 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
           <Alert className="border-blue-500/20 bg-blue-950/20">
             <Info className="h-5 w-5 text-blue-400" />
             <AlertDescription className="text-blue-200">
-              <strong>Kachuful Rules:</strong> Bid on the number of tricks you'll take each round. Score 10 + bid points
-              if you make exactly your bid, 0 points if you don't. Trump suit rotates: Spades → Diamonds → Clubs →
-              Hearts.
+              <strong>Kachuful Rules:</strong> Bid on the number of tricks you'll take each round. Trump suit rotates:
+              Spades → Diamonds → Clubs → Hearts.
             </AlertDescription>
           </Alert>
 
@@ -147,6 +152,60 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
           </div>
 
           <Card className="border-0 bg-slate-700/50 border-slate-600/50">
+            <CardHeader className="pb-4">
+              <h3 className="font-semibold text-slate-200">Custom Rules</h3>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="zero-bid-points" className="text-slate-300 flex items-center gap-2">
+                  Successful '0' Bid Points
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircle className="w-4 h-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Points awarded for bidding 0 and taking 0 tricks.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Input
+                  id="zero-bid-points"
+                  type="number"
+                  value={zeroBidPoints}
+                  onChange={(e) => setZeroBidPoints(parseInt(e.target.value) || 0)}
+                  className="w-24 bg-slate-600/50 border-slate-500 text-white"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="negative-points" className="text-slate-300 flex items-center gap-2">
+                  Enable Minus Points System
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircle className="w-4 h-4 text-slate-400" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          If active: bid 1, take 0 = -11 points.
+                          <br />
+                          Bid 0, take 1 = -[Successful '0' Bid Points].
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </Label>
+                <Switch
+                  id="negative-points"
+                  checked={negativePointsEnabled}
+                  onCheckedChange={setNegativePointsEnabled}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 bg-slate-700/30 border-slate-600/50">
             <CardContent className="p-6">
               <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
                 <div className="w-2 h-2 bg-purple-400 rounded-full"></div>

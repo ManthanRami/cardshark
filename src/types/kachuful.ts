@@ -27,4 +27,6 @@ export interface KachufulGameState {
   maxRounds: number
   gameEnded?: boolean
   winner?: KachufulPlayer
+  zeroBidPoints: number
+  negativePointsEnabled: boolean
 }
