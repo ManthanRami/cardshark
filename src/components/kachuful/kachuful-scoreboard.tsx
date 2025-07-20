@@ -24,8 +24,8 @@ const TRUMP_SUITS = [
 
 export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboardProps) {
   const [currentRoundData, setCurrentRoundData] = useState<{
-    bids: { [playerIndex: number]: number | string }
-    tricks: { [playerIndex: number]: number | string }
+    bids: { [playerIndex: number]: string }
+    tricks: { [playerIndex: number]: string }
   }>({
     bids: {},
     tricks: {},
@@ -65,15 +65,6 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
   }
 
   const calculateScore = (bid: number, tricks: number): number => {
-    if (gameState.negativePointsEnabled) {
-      if (bid === 1 && tricks !== 1) {
-        return -11;
-      }
-      if (bid === 0 && tricks === 1) {
-        return -gameState.zeroBidPoints;
-      }
-    }
-
     if (bid === tricks) {
       if (bid === 0) {
         return gameState.zeroBidPoints;
@@ -81,7 +72,16 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
       return 10 + bid;
     }
     
-    return 0;
+    if (gameState.negativePointsEnabled) {
+      if (bid === 1 && tricks !== 1) { // Note: this condition is met since bid !== tricks
+        return -11;
+      }
+      if (bid === 0 && tricks === 1) { // Note: this condition is met since bid !== tricks
+        return -gameState.zeroBidPoints;
+      }
+    }
+    
+    return 0; // Default case if bid is not met and no negative rules apply
   }
 
   const addRound = () => {
