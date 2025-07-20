@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -5,7 +6,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { KachufulSetup } from "@/components/kachuful/kachuful-setup"
-import { KachufulScoreboard } from "@/components/kachuful/kachuful-scoreboard"
+import { KachufulScoreboard } from "@/components/kachuful-scoreboard"
 import { AdBanner } from "@/components/ad-banner"
 import { ArrowLeft, RotateCcw, Spade } from "lucide-react"
 import type { KachufulGameState } from "@/types/kachuful"
