@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -264,16 +265,20 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
           <Card
             className={`border-0 ${
               isValidConfig
-                ? "bg-gradient-to-r from-green-900/30 to-blue-900/30 border-green-500/30"
-                : "bg-gradient-to-r from-red-900/30 to-orange-900/30 border-red-500/30"
+                ? "bg-slate-700/50 border-green-500/30"
+                : "bg-red-900/30 border-red-500/30"
             }`}
           >
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
+              <h3
+                className={`font-semibold mb-4 flex items-center gap-2 ${isValidConfig ? "text-green-300" : "text-red-300"}`}
+              >
                 <div className={`w-2 h-2 rounded-full ${isValidConfig ? "bg-green-400" : "bg-red-400"}`}></div>
                 Role Configuration Summary
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-300">
+              <div
+                className={`grid grid-cols-1 md:grid-cols-2 gap-4 text-sm ${isValidConfig ? "text-slate-200" : "text-red-200"}`}
+              >
                 <div className="flex items-center gap-2">
                   <UserX className="w-4 h-4 text-red-400" />
                   <span>{roleConfig.mafia} Mafia members</span>
