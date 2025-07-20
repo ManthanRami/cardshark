@@ -123,11 +123,18 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
     setCurrentRoundData({ bids: {}, tricks: {} })
   }
 
-  const canAddRound =
-    Object.values(currentRoundData.bids).length === gameState.players.length &&
-    Object.values(currentRoundData.tricks).length === gameState.players.length &&
-    Object.values(currentRoundData.bids).every((bid) => bid !== "" && !isNaN(Number(bid))) &&
-    Object.values(currentRoundData.tricks).every((trick) => trick !== "" && !isNaN(Number(trick)))
+  const canAddRound = useMemo(() => {
+    const bidsComplete =
+      Object.keys(currentRoundData.bids).length === gameState.players.length &&
+      Object.values(currentRoundData.bids).every((bid) => bid !== "")
+
+    const tricksComplete =
+      Object.keys(currentRoundData.tricks).length === gameState.players.length &&
+      Object.values(currentRoundData.tricks).every((trick) => trick !== "")
+
+    return bidsComplete && tricksComplete
+  }, [currentRoundData, gameState.players.length])
+
 
   const chartData = useMemo(() => {
     return gameState.players.map((player) => ({
