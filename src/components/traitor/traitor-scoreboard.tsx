@@ -179,7 +179,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
           <div className="flex justify-between items-center">
             <CardTitle className="text-white flex items-center gap-3">
               {gameState.currentPhase === "day" ? (
-                <Sun className="h-6 w-6 text-yellow-400" />
+                <Sun className="h-6 w-6 text-purple-400" />
               ) : (
                 <Moon className="h-6 w-6 text-purple-400" />
               )}
