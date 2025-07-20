@@ -1,5 +1,5 @@
 import { GameCard } from '@/components/game-card';
-import { Heart, Spade, Mask } from 'lucide-react';
+import { Heart, Spade, Theater } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -29,7 +29,7 @@ export default function Home() {
           title="Traitor"
           description="A game of deception and deduction. A dashboard for moderators to run the game."
           href="/traitor"
-          Icon={Mask}
+          Icon={Theater}
         />
       </div>
     </div>
