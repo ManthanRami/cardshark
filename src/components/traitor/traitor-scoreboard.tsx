@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -334,7 +335,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                   ? handleNightEnd
                   : () => onGameUpdate({ ...gameState, currentPhase: "night" })
               }
-              className="w-full"
+              className="w-full bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white"
             >
               {gameState.currentPhase === "night" ? (
                 <>
