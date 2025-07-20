@@ -146,10 +146,10 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
             </div>
           </div>
 
-          <Card className="bg-gradient-to-r from-slate-700/30 to-slate-600/30 border-slate-600/50">
+          <Card className="border-0 bg-slate-700/50 border-slate-600/50">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
                 Game Configuration
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -250,5 +250,3 @@ export function KachufulSetup({ onGameStart }: KachufulSetupProps) {
     </div>
   )
 }
-
-    
