@@ -1,18 +1,37 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, GripVertical, X, Info, Users, Eye, Shield, UserX, Heart, Ghost } from "lucide-react"
+import { Plus, GripVertical, X, Info, Users, UserX, Shield, Heart, Ghost } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { TraitorGameState, TraitorRole } from "@/types/traitor"
 
 interface TraitorSetupProps {
   onGameStart: (gameState: TraitorGameState) => void
+}
+
+const getRecommendedRoles = (playerCount: number) => {
+  if (playerCount < 5) {
+    return { mafia: 0, detective: 0, doctor: 0, civilian: 0 }
+  }
+
+  let mafia = 1
+  if (playerCount >= 6) mafia = 2
+  if (playerCount >= 9) mafia = 3
+  if (playerCount >= 12) mafia = 4
+  if (playerCount >= 15) mafia = 5
+  if (playerCount >= 18) mafia = 6
+
+  const detective = playerCount >= 5 ? 1 : 0
+  const doctor = playerCount >= 7 ? 1 : 0
+  const civilian = playerCount - mafia - detective - doctor
+
+  return { mafia, detective, doctor, civilian }
 }
 
 export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
@@ -26,18 +45,17 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
     "Player 6",
     "Player 7",
   ])
-  const [roleConfig, setRoleConfig] = useState({
-    mafia: 2,
-    detective: 1,
-    doctor: 1,
-    civilian: 3,
-  })
+  const [roleConfig, setRoleConfig] = useState(getRecommendedRoles(7))
+
+  useEffect(() => {
+    setRoleConfig(getRecommendedRoles(playerCount))
+  }, [playerCount])
 
   const addPlayer = () => {
     if (players.length < 20) {
-      setPlayers([...players, `Player ${players.length + 1}`])
-      setPlayerCount(players.length + 1)
-      setRoleConfig((prev) => ({ ...prev, civilian: prev.civilian + 1 }))
+      const newCount = players.length + 1
+      setPlayers([...players, `Player ${newCount}`])
+      setPlayerCount(newCount)
     }
   }
 
@@ -46,10 +64,6 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
       const newPlayers = players.filter((_, i) => i !== index)
       setPlayers(newPlayers)
       setPlayerCount(newPlayers.length)
-      const totalRoles = roleConfig.mafia + roleConfig.detective + roleConfig.doctor + roleConfig.civilian
-      if (totalRoles > newPlayers.length) {
-        setRoleConfig((prev) => ({ ...prev, civilian: Math.max(0, prev.civilian - 1) }))
-      }
     }
   }
 
@@ -67,13 +81,6 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
       setPlayers(newPlayers)
     }
   }
-
-  const updateRoleCount = (role: keyof typeof roleConfig, count: number) => {
-    setRoleConfig((prev) => ({ ...prev, [role]: count }))
-  }
-
-  const totalRoles = roleConfig.mafia + roleConfig.detective + roleConfig.doctor + roleConfig.civilian
-  const isValidConfig = totalRoles === players.length && roleConfig.mafia >= 1 && roleConfig.mafia < players.length / 2
 
   const startGame = () => {
     // Shuffle and assign roles
@@ -138,184 +145,61 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             </AlertDescription>
           </Alert>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-            <div className="space-y-2">
-              <Label className="font-medium text-slate-300">Total Players</Label>
-              <Select
-                value={playerCount.toString()}
-                onValueChange={(value) => {
-                  const count = Number.parseInt(value)
-                  setPlayerCount(count)
-                  if (count > players.length) {
-                    const newPlayers = [...players]
-                    for (let i = players.length; i < count; i++) {
-                      newPlayers.push(`Player ${i + 1}`)
-                    }
-                    setPlayers(newPlayers)
-                    setRoleConfig((prev) => ({ ...prev, civilian: prev.civilian + (count - players.length) }))
-                  } else if (count < players.length) {
-                    setPlayers(players.slice(0, count))
-                    const diff = players.length - count
-                    setRoleConfig((prev) => ({ ...prev, civilian: Math.max(0, prev.civilian - diff) }))
+          <div className="space-y-2">
+            <Label className="font-medium text-slate-300">Number of Players</Label>
+            <Select
+              value={playerCount.toString()}
+              onValueChange={(value) => {
+                const count = Number.parseInt(value)
+                setPlayerCount(count)
+                if (count > players.length) {
+                  const newPlayers = [...players]
+                  for (let i = players.length; i < count; i++) {
+                    newPlayers.push(`Player ${i + 1}`)
                   }
-                }}
-              >
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {Array.from({ length: 16 }, (_, i) => i + 5).map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
-                      {num} Players
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-medium text-slate-300 flex items-center gap-2">
-                <UserX className="w-4 h-4 text-red-400" />
-                Mafia
-              </Label>
-              <Select
-                value={roleConfig.mafia.toString()}
-                onValueChange={(value) => updateRoleCount("mafia", Number.parseInt(value))}
-              >
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {Array.from({ length: Math.floor(players.length / 2) }, (_, i) => i + 1).map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
-                      {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-medium text-slate-300 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-blue-400" />
-                Detective
-              </Label>
-              <Select
-                value={roleConfig.detective.toString()}
-                onValueChange={(value) => updateRoleCount("detective", Number.parseInt(value))}
-              >
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {Array.from({ length: 3 }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
-                      {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-medium text-slate-300 flex items-center gap-2">
-                <Heart className="w-4 h-4 text-green-400" />
-                Doctor
-              </Label>
-              <Select
-                value={roleConfig.doctor.toString()}
-                onValueChange={(value) => updateRoleCount("doctor", Number.parseInt(value))}
-              >
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {Array.from({ length: 3 }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
-                      {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-medium text-slate-300 flex items-center gap-2">
-                <Users className="w-4 h-4 text-slate-400" />
-                Civilian
-              </Label>
-              <Select
-                value={roleConfig.civilian.toString()}
-                onValueChange={(value) => updateRoleCount("civilian", Number.parseInt(value))}
-              >
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  {Array.from({ length: players.length }, (_, i) => i).map((num) => (
-                    <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
-                      {num}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                  setPlayers(newPlayers)
+                } else if (count < players.length) {
+                  setPlayers(players.slice(0, count))
+                }
+              }}
+            >
+              <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600">
+                {Array.from({ length: 16 }, (_, i) => i + 5).map((num) => (
+                  <SelectItem key={num} value={num.toString()} className="text-white hover:bg-slate-700">
+                    {num} Players
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          <Card
-            className={`border-0 ${
-              isValidConfig
-                ? "bg-slate-700/50 border-green-500/30"
-                : "bg-red-900/30 border-red-500/30"
-            }`}
-          >
+          <Card className="border-0 bg-slate-700/50 border-slate-600/50">
             <CardContent className="p-6">
-              <h3
-                className={`font-semibold mb-4 flex items-center gap-2 ${isValidConfig ? "text-green-300" : "text-red-300"}`}
-              >
-                <div className={`w-2 h-2 rounded-full ${isValidConfig ? "bg-green-400" : "bg-red-400"}`}></div>
-                Role Configuration Summary
+              <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                Recommended Role Configuration
               </h3>
-              <div
-                className={`grid grid-cols-1 md:grid-cols-2 gap-4 text-sm ${isValidConfig ? "text-slate-200" : "text-red-200"}`}
-              >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-200">
                 <div className="flex items-center gap-2">
                   <UserX className="w-4 h-4 text-red-400" />
-                  <span>{roleConfig.mafia} Mafia members</span>
+                  <span>{roleConfig.mafia} Mafia</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Shield className="w-4 h-4 text-blue-400" />
-                  <span>
-                    {roleConfig.detective} Detective{roleConfig.detective !== 1 ? "s" : ""}
-                  </span>
+                  <span>{roleConfig.detective} Detective</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Heart className="w-4 h-4 text-green-400" />
-                  <span>
-                    {roleConfig.doctor} Doctor{roleConfig.doctor !== 1 ? "s" : ""}
-                  </span>
+                  <span>{roleConfig.doctor} Doctor</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-slate-400" />
-                  <span>
-                    {roleConfig.civilian} Civilian{roleConfig.civilian !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 md:col-span-2">
-                  <Users className="w-4 h-4" />
-                  <span>Total: {totalRoles} players</span>
+                  <span>{roleConfig.civilian} Civilians</span>
                 </div>
               </div>
-              {!isValidConfig && (
-                <Alert className="mt-4 border-red-500/20 bg-red-950/20">
-                  <AlertDescription className="text-red-200 text-sm">
-                    {totalRoles !== players.length &&
-                      `Role count (${totalRoles}) must equal player count (${players.length}). `}
-                    {roleConfig.mafia >= players.length / 2 && "Mafia cannot be half or more of total players. "}
-                    {roleConfig.mafia < 1 && "Must have at least 1 Mafia member."}
-                  </AlertDescription>
-                </Alert>
-              )}
             </CardContent>
           </Card>
 
@@ -386,7 +270,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
           <Button
             onClick={startGame}
-            disabled={!isValidConfig}
+            disabled={playerCount < 5}
             className="w-full bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <Ghost className="w-5 h-5 mr-2" />
