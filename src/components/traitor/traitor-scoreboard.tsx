@@ -93,26 +93,34 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
   }
 
   const handleNightEnd = () => {
-    let eliminatedPlayerId: string | null = null
-    if (mafiaTarget && mafiaTarget !== doctorSave) {
-      eliminatedPlayerId = mafiaTarget
-    }
+    let playersCopy = [...gameState.players]
+    const eliminatedPlayerIds = new Set<string>()
 
-    const newPlayers = gameState.players.map((p) => {
-      if (p.id === eliminatedPlayerId) {
-        return { ...p, isAlive: false, eliminatedRound: gameState.currentRound, eliminationReason: 'kill' }
-      }
-      return p
-    })
-
+    // Detective's action
     if (detectiveCheck) {
-      const target = newPlayers.find((p) => p.id === detectiveCheck)
+      const target = playersCopy.find((p) => p.id === detectiveCheck)
       if (target) {
         setLastInvestigation({ player: target.name, role: target.role })
+        // If detective finds a mafia, they are eliminated (if not saved by doctor)
+        if (target.role === 'mafia' && detectiveCheck !== doctorSave) {
+          eliminatedPlayerIds.add(detectiveCheck)
+        }
       }
     } else {
       setLastInvestigation(null)
     }
+
+    // Mafia's action
+    if (mafiaTarget && mafiaTarget !== doctorSave) {
+      eliminatedPlayerIds.add(mafiaTarget)
+    }
+
+    const newPlayers = playersCopy.map((p) => {
+      if (eliminatedPlayerIds.has(p.id)) {
+        return { ...p, isAlive: false, eliminatedRound: gameState.currentRound, eliminationReason: 'kill' }
+      }
+      return p
+    })
 
     const winner = checkWinCondition(newPlayers)
     onGameUpdate({
@@ -231,7 +239,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                         <SelectValue placeholder="Select target to eliminate..." />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600 text-white">
-                        {townPlayers.map((p) => (
+                        {alivePlayers.filter(p => p.role !== 'mafia').map((p) => (
                           <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
                             {p.name}
                           </SelectItem>
@@ -309,7 +317,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={() => handleElimination(voteTarget!)} disabled={!voteTarget} className="w-full">
+                <Button onClick={() => handleElimination(voteTarget!)} disabled={!voteTarget} className="w-full bg-gradient-to-r from-red-600 to-red-800 text-white">
                   Confirm Elimination
                 </Button>
               </div>
@@ -386,5 +394,3 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
     </div>
   )
 }
-
-    
