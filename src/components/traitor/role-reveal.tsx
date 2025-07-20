@@ -72,20 +72,17 @@ const ROLE_INFO = {
 
 export function RoleReveal({ player, playerIndex, totalPlayers, onNext }: RoleRevealProps) {
   const [roleRevealed, setRoleRevealed] = useState(false)
-  const [isPressed, setIsPressed] = useState(false)
-
-  const roleInfo = ROLE_INFO[player.role]
-  const RoleIcon = roleInfo.icon
 
   const handlePressStart = () => {
-    setIsPressed(true)
     setRoleRevealed(true)
   }
 
   const handlePressEnd = () => {
-    setIsPressed(false)
     setRoleRevealed(false)
   }
+
+  const roleInfo = ROLE_INFO[player.role]
+  const RoleIcon = roleInfo.icon
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 p-4">
@@ -117,7 +114,7 @@ export function RoleReveal({ player, playerIndex, totalPlayers, onNext }: RoleRe
               onTouchStart={handlePressStart}
               onTouchEnd={handlePressEnd}
               size="lg"
-              className={`w-48 ${isPressed ? roleInfo.color : "bg-slate-600"} hover:opacity-90 text-white py-4 px-8 rounded-xl transition-all duration-200 select-none`}
+              className={`w-48 ${roleRevealed ? roleInfo.color : "bg-slate-600"} hover:opacity-90 text-white py-4 px-8 rounded-xl transition-all duration-200 select-none`}
             >
               {roleRevealed ? <EyeOff className="w-5 h-5 mr-2" /> : <Eye className="w-5 h-5 mr-2" />}
               {roleRevealed ? "Release to Hide" : "Press & Hold"}
