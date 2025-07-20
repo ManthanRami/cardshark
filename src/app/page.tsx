@@ -9,17 +9,6 @@ import Link from "next/link"
 
 const games = [
   {
-    id: "kachuful",
-    title: "Kachuful",
-    description: "Strategic bidding card game with trump suits. Track bids, tricks, and scores with precision.",
-    icon: Spade,
-    color: "from-slate-600 to-slate-800",
-    players: "2-10 Players",
-    difficulty: "Advanced",
-    href: "/kachuful",
-    image: "/placeholder.svg?height=200&width=300",
-  },
-  {
     id: "hearts",
     title: "Hearts",
     description: "Classic trick-taking game. Avoid hearts and the Queen of Spades to achieve the lowest score.",
@@ -39,6 +28,17 @@ const games = [
     players: "5-20 Players",
     difficulty: "Intermediate",
     href: "/traitor",
+    image: "/placeholder.svg?height=200&width=300",
+  },
+  {
+    id: "kachuful-judgment",
+    title: "Kachuful / Judgment",
+    description: "Strategic bidding game where you predict the tricks you'll take. Precision is key!",
+    icon: Spade,
+    color: "from-slate-600 to-slate-800",
+    players: "2-10 Players",
+    difficulty: "Advanced",
+    href: "/kachuful/judgment",
     image: "/placeholder.svg?height=200&width=300",
   },
 ]

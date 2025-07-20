@@ -9,28 +9,24 @@ import { KachufulScoreboard } from "@/components/kachuful/kachuful-scoreboard"
 import { AdBanner } from "@/components/ad-banner"
 import { ArrowLeft, RotateCcw, Spade } from "lucide-react"
 import type { KachufulGameState } from "@/types/kachuful"
+import { saveKachufulGame, loadKachufulGame } from "@/lib/storage"
 
-export default function KachufulPage() {
+export default function KachufulJudgmentPage() {
   const [gameState, setGameState] = useState<KachufulGameState | null>(null)
+  const [gameId] = useState("kachuful-judgment-game")
 
-  // Load saved game on mount
   useEffect(() => {
-    const saved = localStorage.getItem("kachuful-game")
+    const saved = loadKachufulGame()
     if (saved) {
-      try {
-        setGameState(JSON.parse(saved))
-      } catch (error) {
-        console.error("Failed to load saved game:", error)
-      }
+      setGameState(saved)
     }
-  }, [])
+  }, [gameId])
 
-  // Save game state whenever it changes
   useEffect(() => {
     if (gameState) {
-      localStorage.setItem("kachuful-game", JSON.stringify(gameState))
+      saveKachufulGame(gameState)
     }
-  }, [gameState])
+  }, [gameState, gameId])
 
   const handleGameStart = (newGameState: KachufulGameState) => {
     setGameState(newGameState)
@@ -41,18 +37,16 @@ export default function KachufulPage() {
   }
 
   const handleNewGame = () => {
-    localStorage.removeItem("kachuful-game")
+    localStorage.removeItem(gameId)
     setGameState(null)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
-      {/* Background Pattern */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800/20 to-slate-900 text-white">
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(106,90,205,0.3),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,90,220,0.2),transparent_50%)]" />
       </div>
 
-      {/* Header */}
       <header className="relative z-10 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -73,8 +67,8 @@ export default function KachufulPage() {
                   <Spade className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-white">Kachuful Scoreboard</h1>
-                  <p className="text-sm text-slate-400">Strategic bidding with trump suits</p>
+                  <h1 className="text-xl font-bold text-white">Kachuful / Judgment</h1>
+                  <p className="text-sm text-slate-400">Strategic bidding game</p>
                 </div>
               </div>
             </div>
@@ -96,7 +90,6 @@ export default function KachufulPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="relative z-10 container mx-auto px-6 py-8">
         {!gameState ? (
           <KachufulSetup onGameStart={handleGameStart} />
@@ -104,7 +97,6 @@ export default function KachufulPage() {
           <KachufulScoreboard gameState={gameState} onGameUpdate={handleGameUpdate} />
         )}
 
-        {/* Ad Banner */}
         {gameState && (
           <div className="mt-8">
             <AdBanner />
