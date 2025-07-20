@@ -86,8 +86,8 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
 
   const addRound = () => {
     const playerScores: KachufulPlayerRound[] = gameState.players.map((_, index) => {
-      const bid = Number(currentRoundData.bids[index] ?? 0)
-      const tricks = Number(currentRoundData.tricks[index] ?? 0)
+      const bid = Number(currentRoundData.bids[index] || 0)
+      const tricks = Number(currentRoundData.tricks[index] || 0)
       const score = calculateScore(bid, tricks)
       return { bid, tricks, score }
     })
@@ -124,16 +124,12 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
   }
 
   const canAddRound = useMemo(() => {
-    const bidsComplete =
-      Object.keys(currentRoundData.bids).length === gameState.players.length &&
-      Object.values(currentRoundData.bids).every((bid) => bid !== "")
-
-    const tricksComplete =
-      Object.keys(currentRoundData.tricks).length === gameState.players.length &&
-      Object.values(currentRoundData.tricks).every((trick) => trick !== "")
-
-    return bidsComplete && tricksComplete
-  }, [currentRoundData, gameState.players.length])
+    return gameState.players.every((_, index) => {
+      const bid = currentRoundData.bids[index];
+      const trick = currentRoundData.tricks[index];
+      return bid !== undefined && bid !== '' && trick !== undefined && trick !== '';
+    });
+  }, [currentRoundData.bids, currentRoundData.tricks, gameState.players]);
 
 
   const chartData = useMemo(() => {
