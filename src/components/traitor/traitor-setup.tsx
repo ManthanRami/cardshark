@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, GripVertical, X, Info, Users, UserX, Shield, Heart, Ghost } from "lucide-react"
+import { Plus, GripVertical, X, Info, Users, UserX, Shield, Heart, Ghost, AlertTriangle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { TraitorGameState, TraitorRole } from "@/types/traitor"
 
@@ -17,7 +17,7 @@ interface TraitorSetupProps {
 
 const getRecommendedRoles = (playerCount: number) => {
   if (playerCount < 5) {
-    return { mafia: 0, detective: 0, doctor: 0, civilian: 0 }
+    return { mafia: 0, detective: 0, doctor: 0 }
   }
 
   let mafia = 1
@@ -29,9 +29,8 @@ const getRecommendedRoles = (playerCount: number) => {
 
   const detective = playerCount >= 5 ? 1 : 0
   const doctor = playerCount >= 7 ? 1 : 0
-  const civilian = playerCount - mafia - detective - doctor
-
-  return { mafia, detective, doctor, civilian }
+  
+  return { mafia, detective, doctor }
 }
 
 export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
@@ -47,9 +46,18 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
   ])
   const [roleConfig, setRoleConfig] = useState(getRecommendedRoles(7))
 
+  const civilianCount = playerCount - roleConfig.mafia - roleConfig.detective - roleConfig.doctor
+  const totalRolesAssigned = roleConfig.mafia + roleConfig.detective + roleConfig.doctor + civilianCount
+  const isRoleConfigValid = totalRolesAssigned === playerCount && civilianCount >= 0
+
   useEffect(() => {
     setRoleConfig(getRecommendedRoles(playerCount))
   }, [playerCount])
+
+  const handleRoleChange = (role: 'mafia' | 'detective' | 'doctor', count: number) => {
+    const newCount = Math.max(0, count)
+    setRoleConfig(prev => ({ ...prev, [role]: newCount }))
+  }
 
   const addPlayer = () => {
     if (players.length < 20) {
@@ -83,15 +91,15 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
   }
 
   const startGame = () => {
-    // Shuffle and assign roles
+    if (!isRoleConfigValid) return
+    
     const roles: TraitorRole[] = [
       ...Array(roleConfig.mafia).fill("mafia"),
       ...Array(roleConfig.detective).fill("detective"),
       ...Array(roleConfig.doctor).fill("doctor"),
-      ...Array(roleConfig.civilian).fill("civilian"),
+      ...Array(civilianCount).fill("civilian"),
     ]
 
-    // Fisher-Yates shuffle
     for (let i = roles.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
       ;[roles[i], roles[j]] = [roles[j], roles[i]]
@@ -112,9 +120,8 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
       currentPhase: "night",
       gameEnded: false,
       winner: null,
-      roleConfig,
+      roleConfig: {...roleConfig, civilian: civilianCount},
       gameStarted: true,
-      nightActions: {},
     }
 
     onGameStart(gameState)
@@ -140,8 +147,7 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
             <AlertDescription className="text-blue-200">
               <strong>Traitor Rules:</strong> Mafia members try to eliminate all other players. Town (Detective + Doctor
               + Civilians) wins by eliminating all Mafia. Detective can investigate one player each night. Doctor can
-              protect one player each night. Game alternates between Day (discussion), Voting (eliminate someone), and
-              Night (special actions) phases.
+              protect one player each night.
             </AlertDescription>
           </Alert>
 
@@ -178,28 +184,41 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
           <Card className="border-0 bg-slate-700/50 border-slate-600/50">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-slate-200 mb-4 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                Recommended Role Configuration
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-slate-200 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                  Role Configuration
+                </h3>
+                <Button variant="outline" size="sm" className="bg-transparent border-slate-600 text-slate-300 hover:bg-slate-700/50 text-xs" onClick={() => setRoleConfig(getRecommendedRoles(playerCount))}>
+                  Use Recommended
+                </Button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-200">
-                <div className="flex items-center gap-2">
-                  <UserX className="w-4 h-4 text-red-400" />
-                  <span>{roleConfig.mafia} Mafia</span>
+                <div className="space-y-2">
+                   <Label className="flex items-center gap-2 text-red-400"><UserX className="w-4 h-4" /> Mafia</Label>
+                   <Input type="number" value={roleConfig.mafia} onChange={e => handleRoleChange('mafia', parseInt(e.target.value))} className="bg-slate-600/50 border-slate-500 text-white" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-blue-400" />
-                  <span>{roleConfig.detective} Detective</span>
+                 <div className="space-y-2">
+                   <Label className="flex items-center gap-2 text-blue-400"><Shield className="w-4 h-4" /> Detective</Label>
+                   <Input type="number" value={roleConfig.detective} onChange={e => handleRoleChange('detective', parseInt(e.target.value))} className="bg-slate-600/50 border-slate-500 text-white" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-green-400" />
-                  <span>{roleConfig.doctor} Doctor</span>
+                 <div className="space-y-2">
+                   <Label className="flex items-center gap-2 text-green-400"><Heart className="w-4 h-4" /> Doctor</Label>
+                   <Input type="number" value={roleConfig.doctor} onChange={e => handleRoleChange('doctor', parseInt(e.target.value))} className="bg-slate-600/50 border-slate-500 text-white" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-slate-400" />
-                  <span>{roleConfig.civilian} Civilians</span>
+                 <div className="space-y-2">
+                   <Label className="flex items-center gap-2 text-slate-400"><Users className="w-4 h-4" /> Civilians</Label>
+                   <Input type="number" value={civilianCount} readOnly className="bg-slate-800/50 border-slate-600 text-slate-300" />
                 </div>
               </div>
+              {!isRoleConfigValid && (
+                <Alert variant="destructive" className="mt-4 bg-red-950/30 border-red-500/30 text-red-300">
+                  <AlertTriangle className="h-4 w-4 text-red-400" />
+                  <AlertDescription>
+                    Total roles ({totalRolesAssigned}) must equal player count ({playerCount}). Please adjust roles.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 
@@ -270,8 +289,8 @@ export function TraitorSetup({ onGameStart }: TraitorSetupProps) {
 
           <Button
             onClick={startGame}
-            disabled={playerCount < 5}
-            className="w-full bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            disabled={!isRoleConfigValid}
+            className="w-full bg-gradient-to-r from-purple-700 to-indigo-900 hover:opacity-90 text-white py-6 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Ghost className="w-5 h-5 mr-2" />
             Start Traitor Game

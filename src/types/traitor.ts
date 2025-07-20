@@ -47,14 +47,3 @@ export interface TraitorGameState {
   }
   gameStarted: boolean
 }
-
-export interface TraitorSetup {
-  totalPlayers: number
-  playerNames: string[]
-  roleCount: {
-    mafia: number
-    detective: number
-    doctor: number
-    civilian: number
-  }
-}
