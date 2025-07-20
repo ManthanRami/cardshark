@@ -15,9 +15,10 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, Shield, UserX, Users, Moon, Sun, Vote, RotateCcw, Trophy, Heart } from "lucide-react"
+import { Eye, Shield, UserX, Users, Moon, Sun, Vote, RotateCcw, Trophy, Heart, Ghost } from "lucide-react"
 import { CelebrationEffects } from "@/components/celebration-effects"
 import type { TraitorGameState, TraitorPlayer } from "@/types/traitor"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface TraitorScoreboardProps {
   onNewGame: () => void
@@ -62,6 +63,9 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
   const [detectiveCheck, setDetectiveCheck] = useState<string | null>(null)
   const [lastInvestigation, setLastInvestigation] = useState<{ player: string; role: string } | null>(null)
 
+  // Day Actions State
+  const [voteTarget, setVoteTarget] = useState<string | null>(null)
+
   const alivePlayers = gameState.players.filter((p) => p.isAlive)
   const mafiaPlayers = alivePlayers.filter((p) => p.role === "mafia")
   const townPlayers = alivePlayers.filter((p) => p.role !== "mafia")
@@ -78,12 +82,14 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
   }
 
   const handleElimination = (playerId: string) => {
+    if (!playerId) return
     const newPlayers = gameState.players.map((p) =>
-      p.id === playerId ? { ...p, isAlive: false, eliminatedRound: gameState.currentRound } : p,
+      p.id === playerId ? { ...p, isAlive: false, eliminatedRound: gameState.currentRound, eliminationReason: 'vote' } : p,
     )
     const winner = checkWinCondition(newPlayers)
     onGameUpdate({ ...gameState, players: newPlayers, winner, currentPhase: "night" })
     if (winner) setShowCelebration(true)
+    setVoteTarget(null)
   }
 
   const handleNightEnd = () => {
@@ -94,7 +100,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
 
     const newPlayers = gameState.players.map((p) => {
       if (p.id === eliminatedPlayerId) {
-        return { ...p, isAlive: false, eliminatedRound: gameState.currentRound }
+        return { ...p, isAlive: false, eliminatedRound: gameState.currentRound, eliminationReason: 'kill' }
       }
       return p
     })
@@ -155,7 +161,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                 const info = roleInfo[player.role]
                 const RoleIcon = info.icon
                 return (
-                  <Card key={player.id} className={`p-4 text-center ${info.color} ${info.borderColor}`}>
+                  <Card key={player.id} className={`p-4 text-center ${info.color} ${info.borderColor} ${!player.isAlive ? 'opacity-50' : ''}`}>
                     <RoleIcon className={`w-8 h-8 mx-auto mb-2 ${info.textColor}`} />
                     <p className={`font-bold ${!player.isAlive ? "line-through" : ""}`}>{player.name}</p>
                     <p className="text-xs capitalize text-slate-300">{player.role}</p>
@@ -204,57 +210,13 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
         </CardHeader>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Player List */}
-        <Card className="bg-slate-800/50 border-slate-700/50">
+      {/* Actions Panel */}
+      <Card className="bg-slate-800/50 border-slate-700/50">
           <CardHeader>
-            <CardTitle className="text-white">Players</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {alivePlayers.map((player) => {
-              const info = roleInfo[player.role]
-              const RoleIcon = info.icon
-              return (
-                <Card
-                  key={player.id}
-                  className={`p-4 flex items-center justify-between transition-all ${info.color} ${info.borderColor} ${
-                    gameState.currentPhase === "day"
-                      ? "hover:bg-slate-700/50 cursor-pointer"
-                      : "cursor-default"
-                  }`}
-                  onClick={() => gameState.currentPhase === "day" && handleElimination(player.id)}
-                >
-                  <div className="flex items-center gap-3">
-                    {showRoles ? (
-                      <RoleIcon className={`w-5 h-5 ${info.textColor}`} />
-                    ) : (
-                      <div className="w-5 h-5 bg-slate-600 rounded-full" />
-                    )}
-                    <span className="font-medium">{player.name}</span>
-                  </div>
-                  {gameState.currentPhase === "day" && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleElimination(player.id)
-                      }}
-                    >
-                      <Vote className="w-4 h-4 mr-2" />
-                      Vote Out
-                    </Button>
-                  )}
-                </Card>
-              )
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Actions Panel */}
-        <Card className="bg-slate-800/50 border-slate-700/50">
-          <CardHeader>
-            <CardTitle className="text-white">Actions</CardTitle>
+            <CardTitle className="text-white">{gameState.currentPhase === 'day' ? 'Day Actions' : 'Night Actions'}</CardTitle>
+            <CardDescription className="text-slate-400">
+              {gameState.currentPhase === 'day' ? 'Discuss, then vote to eliminate a player.' : 'Special roles perform their actions secretly.'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {gameState.currentPhase === "night" ? (
@@ -266,7 +228,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                     </Label>
                     <Select onValueChange={setMafiaTarget} value={mafiaTarget || ""}>
                       <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                        <SelectValue placeholder="Select target..." />
+                        <SelectValue placeholder="Select target to eliminate..." />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600 text-white">
                         {townPlayers.map((p) => (
@@ -308,7 +270,7 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                       </SelectTrigger>
                       <SelectContent className="bg-slate-800 border-slate-600 text-white">
                         {alivePlayers
-                          .filter((p) => p.role !== "detective")
+                          .filter((p) => p.id !== detectivePlayer.id)
                           .map((p) => (
                             <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
                               {p.name}
@@ -320,14 +282,36 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
                 )}
               </div>
             ) : (
-              <div className="text-center text-slate-400">
-                <p>Day phase in progress. Discuss and decide who to vote out.</p>
-                {lastInvestigation && (
-                  <p className="mt-4 text-sm bg-blue-900/50 p-3 rounded-lg border border-blue-500/30">
-                    Last night's investigation: <strong>{lastInvestigation.player}</strong> is a{" "}
-                    <strong>{lastInvestigation.role}</strong>.
-                  </p>
+              <div className="space-y-4">
+                 {lastInvestigation && (
+                  <Alert className="border-blue-500/20 bg-blue-950/20">
+                     <Eye className="h-5 w-5 text-blue-400" />
+                     <AlertDescription className="text-blue-200">
+                      Detective's report: <strong>{lastInvestigation.player}</strong> is a{" "}
+                      <strong>{lastInvestigation.role}</strong>.
+                    </AlertDescription>
+                  </Alert>
                 )}
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2 text-slate-300">
+                    <Vote className="w-4 h-4" /> Vote to Eliminate
+                  </Label>
+                  <Select onValueChange={setVoteTarget} value={voteTarget || ""}>
+                    <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
+                      <SelectValue placeholder="Select player to vote out..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600 text-white">
+                      {alivePlayers.map((p) => (
+                        <SelectItem key={p.id} value={p.id} className="hover:bg-slate-700">
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={() => handleElimination(voteTarget!)} disabled={!voteTarget} className="w-full">
+                  Confirm Elimination
+                </Button>
               </div>
             )}
           </CardContent>
@@ -342,35 +326,65 @@ export function TraitorScoreboard({ gameState, onGameUpdate, onNewGame }: Traito
             >
               {gameState.currentPhase === "night" ? (
                 <>
-                  <Sun className="mr-2 h-4 w-4" /> End Night
+                  <Sun className="mr-2 h-4 w-4" /> End Night & Reveal Outcome
                 </>
               ) : (
                 <>
-                  <Moon className="mr-2 h-4 w-4" /> End Day
+                  <Moon className="mr-2 h-4 w-4" /> Proceed to Night Phase
                 </>
               )}
             </Button>
           </CardFooter>
         </Card>
-      </div>
 
-      {gameState.players.filter((p) => !p.isAlive).length > 0 && (
-        <Card className="bg-slate-800/50 border-slate-700/50">
-          <CardHeader>
-            <CardTitle className="text-white">Eliminated Players</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-4">
-            {gameState.players
-              .filter((p) => !p.isAlive)
-              .map((player) => (
-                <Badge key={player.id} variant="secondary" className="p-2 text-base">
-                  <span className="line-through">{player.name}</span>
-                  {showRoles && <span className="ml-2 capitalize opacity-70">({player.role})</span>}
-                </Badge>
-              ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Player List */}
+      <Card className="bg-slate-800/50 border-slate-700/50">
+        <CardHeader>
+          <CardTitle className="text-white">Player Status</CardTitle>
+          <CardDescription className="text-slate-400">Overview of all players in the game.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {gameState.players.map((player) => {
+            const info = roleInfo[player.role]
+            const RoleIcon = info.icon
+            return (
+              <Card
+                key={player.id}
+                className={`p-3 flex items-center justify-between transition-all ${
+                  player.isAlive ? `${info.color} ${info.borderColor}` : 'bg-slate-800/50 border-slate-700 opacity-60'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  {player.isAlive ? (
+                    showRoles ? (
+                      <RoleIcon className={`w-5 h-5 ${info.textColor}`} />
+                    ) : (
+                      <div className="w-5 h-5 bg-slate-600 rounded-full" />
+                    )
+                  ) : (
+                    <Ghost className="w-5 h-5 text-slate-400" />
+                  )}
+                  
+                  <div className="flex flex-col">
+                    <span className={`font-medium ${!player.isAlive && 'line-through'}`}>{player.name}</span>
+                    {showRoles && (
+                      <Badge variant="secondary" className="w-fit text-xs mt-1 capitalize">{player.role}</Badge>
+                    )}
+                  </div>
+                </div>
+
+                {!player.isAlive && player.eliminatedRound && (
+                  <Badge variant="destructive" className="text-xs">
+                    Out R{player.eliminatedRound}
+                  </Badge>
+                )}
+              </Card>
+            )
+          })}
+        </CardContent>
+      </Card>
     </div>
   )
 }
+
+    
