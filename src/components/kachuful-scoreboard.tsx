@@ -78,8 +78,8 @@ const calculateScore = (
     return bid === 0 ? zeroBidPoints : 10 + bid
   }
   if (negativePointsEnabled) {
-    if (bid === 0 && tricks > 0) return -zeroBidPoints
-    if (bid > 0 && tricks !== bid) return -bid
+    if (bid > 0) return bid * -11
+    if (bid === 0) return -zeroBidPoints
   }
   return 0
 }
