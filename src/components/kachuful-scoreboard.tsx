@@ -226,6 +226,17 @@ export function KachufulScoreboard({
     score: player.totalScore,
   }))
 
+  const historyWithTotals = gameState.rounds.map((round) => {
+    const roundTotals = gameState.players.map((_, pIndex) => {
+      let total = 0
+      for (let i = 0; i <= round.roundNumber - 1; i++) {
+        total += gameState.rounds[i].playerScores[pIndex].score
+      }
+      return total
+    })
+    return { ...round, totals: roundTotals }
+  })
+
   return (
     <div className="space-y-8 animate-slide-in-up">
       <Card className="bg-slate-800/50 border-slate-700/50">
@@ -352,8 +363,8 @@ export function KachufulScoreboard({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {gameState.rounds.slice().reverse().map((round, rIndex) => (
-                    <TableRow key={rIndex} className="border-slate-700/50">
+                  {historyWithTotals.slice().reverse().map((round) => (
+                    <TableRow key={round.roundNumber} className="border-slate-700/50">
                       <TableCell className="font-medium text-white">
                         <div className="flex flex-col">
                           <span>Round {round.roundNumber}</span>
@@ -370,6 +381,9 @@ export function KachufulScoreboard({
                             </Badge>
                             <span className="text-xs text-slate-400 mt-1">
                               {pScore.bid}/{pScore.tricks}
+                            </span>
+                             <span className="text-sm font-bold text-white mt-1">
+                              {round.totals[pIndex]}
                             </span>
                           </div>
                         </TableCell>
