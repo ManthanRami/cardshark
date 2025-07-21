@@ -27,16 +27,11 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  Legend,
 } from "recharts"
 import { Plus, Spade, Diamond, Club, Heart, Trophy, Crown } from "lucide-react"
 import { CelebrationEffects } from "@/components/celebration-effects"
 import type {
   KachufulGameState,
-  KachufulPlayer,
   KachufulRound,
   KachufulPlayerRound,
   TrumpSuit,
@@ -65,8 +60,7 @@ const TrumpIcon = ({ suit }: { suit: TrumpSuit }) => {
 
 const calculateCardsForRound = (
   round: number,
-  maxCards: number,
-  maxRounds: number,
+  maxCards: number
 ) => {
   if (round <= maxCards) {
     return round
@@ -78,7 +72,7 @@ const calculateScore = (
   bid: number,
   tricks: number,
   zeroBidPoints: number,
-  negativePointsEnabled: boolean,
+  negativePointsEnabled: boolean
 ): number => {
   if (bid === tricks) {
     return bid === 0 ? zeroBidPoints : 10 + bid
@@ -99,18 +93,17 @@ export function KachufulScoreboard({
   }>(
     gameState.players.reduce(
       (acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }),
-      {},
-    ),
+      {}
+    )
   )
   const [showCelebration, setShowCelebration] = useState(false)
 
   const maxCards = Math.floor(
-    (52 * gameState.deckCount) / gameState.players.length,
+    (52 * gameState.deckCount) / gameState.players.length
   )
   const currentCards = calculateCardsForRound(
     gameState.currentRound,
-    maxCards,
-    gameState.maxRounds,
+    maxCards
   )
   const currentTrump =
     TRUMP_SUITS_ORDER[(gameState.currentRound - 1) % TRUMP_SUITS_ORDER.length]
@@ -118,8 +111,12 @@ export function KachufulScoreboard({
   const updateRoundData = (
     playerIndex: number,
     field: "bid" | "tricks",
-    value: string,
+    value: string
   ) => {
+    // Only allow numeric input
+    if (value !== "" && !/^\d+$/.test(value)) {
+        return;
+    }
     setCurrentRoundData((prev) => ({
       ...prev,
       [playerIndex]: {
@@ -134,9 +131,7 @@ export function KachufulScoreboard({
     return (
       data &&
       data.bid !== "" &&
-      !isNaN(parseInt(data.bid)) &&
-      data.tricks !== "" &&
-      !isNaN(parseInt(data.tricks))
+      data.tricks !== ""
     )
   })
 
@@ -151,10 +146,10 @@ export function KachufulScoreboard({
           bid,
           tricks,
           gameState.zeroBidPoints,
-          gameState.negativePointsEnabled,
+          gameState.negativePointsEnabled
         )
         return { bid, tricks, score }
-      },
+      }
     )
 
     const newRound: KachufulRound = {
@@ -173,7 +168,7 @@ export function KachufulScoreboard({
     const gameEnded = gameState.currentRound >= gameState.maxRounds
     const winner = gameEnded
       ? updatedPlayers.reduce((max, p) =>
-          p.totalScore > max.totalScore ? p : max,
+          p.totalScore > max.totalScore ? p : max
         )
       : undefined
 
@@ -195,8 +190,8 @@ export function KachufulScoreboard({
     setCurrentRoundData(
       gameState.players.reduce(
         (acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }),
-        {},
-      ),
+        {}
+      )
     )
   }
 
@@ -230,16 +225,6 @@ export function KachufulScoreboard({
     name: player.name,
     score: player.totalScore,
   }))
-
-  const historyData = gameState.rounds.map((round) => {
-    const roundEntry: { [key: string]: any } = {
-      round: `R${round.roundNumber} (${round.cards})`,
-    }
-    gameState.players.forEach((player, pIndex) => {
-      roundEntry[player.name] = round.playerScores[pIndex]?.score
-    })
-    return roundEntry
-  })
 
   return (
     <div className="space-y-8 animate-slide-in-up">
@@ -282,7 +267,9 @@ export function KachufulScoreboard({
                   <div className="flex-1 space-y-1">
                     <label className="text-xs text-slate-400">Bid:</label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       max={currentCards}
                       value={currentRoundData[index]?.bid || ""}
@@ -296,7 +283,9 @@ export function KachufulScoreboard({
                   <div className="flex-1 space-y-1">
                     <label className="text-xs text-slate-400">Tricks:</label>
                     <Input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       min="0"
                       max={currentCards}
                       value={currentRoundData[index]?.tricks || ""}
@@ -342,6 +331,7 @@ export function KachufulScoreboard({
                     tickLine={false}
                     axisLine={false}
                     stroke="hsl(var(--muted-foreground))"
+                    width={80}
                   />
                   <Tooltip
                     cursor={{ fill: "hsl(var(--accent))" }}
@@ -373,7 +363,7 @@ export function KachufulScoreboard({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {gameState.rounds.map((round, rIndex) => (
+                  {gameState.rounds.slice().reverse().map((round, rIndex) => (
                     <TableRow key={rIndex} className="border-slate-700/50">
                       <TableCell className="font-medium text-white">
                         <div className="flex flex-col">
