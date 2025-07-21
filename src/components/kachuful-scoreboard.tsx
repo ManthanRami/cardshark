@@ -241,64 +241,53 @@ export function KachufulScoreboard({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {gameState.players.map((player, index) => (
-              <Card
-                key={player.name}
-                className="bg-slate-700/30 border-slate-600/50"
-              >
-                <CardHeader className="pb-4">
-                  <CardTitle className="text-white text-lg flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                        {index + 1}
-                      </div>
-                      {player.name}
-                    </div>
-                    <Badge className="bg-slate-600 text-white">
-                      Total: {player.totalScore}
-                    </Badge>
-                  </CardTitle>
-                  <CardDescription className="text-slate-400">
-                    Enter bid and tricks taken
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex items-center gap-4">
-                  <div className="flex-1 space-y-1">
-                    <label className="text-xs text-slate-400">Bid:</label>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      max={currentCards}
-                      value={currentRoundData[index]?.bid || ""}
-                      onChange={(e) =>
-                        updateRoundData(index, "bid", e.target.value)
-                      }
-                      className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <label className="text-xs text-slate-400">Tricks:</label>
-                    <Input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      min="0"
-                      max={currentCards}
-                      value={currentRoundData[index]?.tricks || ""}
-                      onChange={(e) =>
-                        updateRoundData(index, "tricks", e.target.value)
-                      }
-                      className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="overflow-x-auto custom-scrollbar">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-slate-700 hover:bg-transparent">
+                  <TableHead className="text-slate-300">Player</TableHead>
+                  <TableHead className="text-center text-slate-300">Total Score</TableHead>
+                  <TableHead className="text-center text-slate-300 w-24">Bid</TableHead>
+                  <TableHead className="text-center text-slate-300 w-24">Tricks</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {gameState.players.map((player, index) => (
+                  <TableRow key={player.name} className="border-slate-700/50">
+                    <TableCell className="font-medium text-white">{player.name}</TableCell>
+                    <TableCell className="text-center">
+                       <Badge className="bg-slate-600 text-white">{player.totalScore}</Badge>
+                    </TableCell>
+                    <TableCell>
+                       <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          min="0"
+                          max={currentCards}
+                          value={currentRoundData[index]?.bid || ""}
+                          onChange={(e) => updateRoundData(index, "bid", e.target.value)}
+                          className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
+                          placeholder="0"
+                        />
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        min="0"
+                        max={currentCards}
+                        value={currentRoundData[index]?.tricks || ""}
+                        onChange={(e) => updateRoundData(index, "tricks", e.target.value)}
+                        className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
+                        placeholder="0"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
 
           <Button
