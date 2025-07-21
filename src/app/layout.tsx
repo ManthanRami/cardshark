@@ -1,45 +1,61 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { cn } from '@/lib/utils';
-import { ThemeProvider } from '@/components/theme-provider';
-import { Header } from '@/components/layout/header';
-import { Toaster } from '@/components/ui/toaster';
-import { AdPlaceholder } from '@/components/ad-placeholder';
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import Script from "next/script"
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  display: "swap",
+})
 
 export const metadata: Metadata = {
-  title: 'CardShark Scoreboard',
-  description: 'Score tracking for your favorite card games.',
-};
+  title: "Scoreboard Hub",
+  description: "Digital scoreboards for Kachuful, Hearts, and other card games",
+  generator: "v0.dev",
+  keywords: ["scoreboard", "card games", "hearts", "kachuful", "score tracking"],
+  authors: [{ name: "Scoreboard Hub" }],
+  robots: "index, follow",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
+  const adsenseClientId = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
+        {/* Google AdSense */}
+        {adsenseClientId && process.env.NODE_ENV === "production" && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsenseClientId}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+
+        {/* Preconnect to AdSense domains for better performance */}
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <link rel="preconnect" href="https://pagead2.googlesyndication.com" />
+            <link rel="preconnect" href="https://googleads.g.doubleclick.net" />
+            <link rel="preconnect" href="https://www.google.com" />
+          </>
+        )}
       </head>
-      <body className={cn('min-h-screen bg-background font-sans antialiased')}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <footer className="py-6 md:px-8 md:py-0">
-              <div className="container flex flex-col items-center justify-center gap-4 md:h-24 md:flex-row">
-                <AdPlaceholder />
-              </div>
-            </footer>
-          </div>
+      <body className={inter.className}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
           <Toaster />
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
