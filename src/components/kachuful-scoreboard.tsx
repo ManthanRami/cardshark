@@ -20,14 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Plus, Spade, Diamond, Club, Heart, Trophy, Crown } from "lucide-react"
 import { CelebrationEffects } from "@/components/celebration-effects"
 import type {
