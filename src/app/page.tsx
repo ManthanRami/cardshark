@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AdBanner } from "@/components/ad-banner"
-import { Heart, Spade, Play, Trophy, Users, Gamepad2, Ghost } from "lucide-react" // Added Shield and Ghost for Traitor game
+import { Heart, Spade, Play, Trophy, Users, Gamepad2, Ghost, Lightbulb } from "lucide-react"
 import Link from "next/link"
 
 const games = [
@@ -41,6 +41,17 @@ const games = [
     href: "/kachuful/judgment",
     image: "/placeholder.svg?height=200&width=300",
   },
+  {
+    id: "suggest",
+    title: "Suggest a Game",
+    description: "Have a favorite game you'd like to see? Let us know! We're always looking for new scoreboards.",
+    icon: Lightbulb,
+    color: "from-green-500 to-teal-700",
+    players: "Community",
+    difficulty: "Feedback",
+    href: "/suggest",
+    image: "/placeholder.svg?height=200&width=300",
+  },
 ]
 
 export default function HomePage() {
@@ -48,8 +59,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(106,90,205,0.3),transparent_50%)]" />
-        {/* Replaced yellow with a subtle purple/blue gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(120,90,220,0.2),transparent_50%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(120,90,220,0.1)_50%,transparent_75%)]" />
       </div>
 
@@ -133,7 +143,9 @@ export default function HomePage() {
                   >
                     <Link href={game.href} className="flex items-center justify-center space-x-3">
                       <Play className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                      <span>Start {game.title}</span>
+                      <span>
+                        {game.id === "suggest" ? "Suggest a Game" : `Start ${game.title}`}
+                      </span>
                     </Link>
                   </Button>
                 </CardContent>
