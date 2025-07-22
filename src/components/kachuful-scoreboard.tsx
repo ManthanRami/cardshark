@@ -1,34 +1,13 @@
-
 "use client"
 
 import { useState } from "react"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
 import { Plus, Spade, Diamond, Club, Heart, Trophy, Crown } from "lucide-react"
 import { CelebrationEffects } from "@/components/celebration-effects"
-import type {
-  KachufulGameState,
-  KachufulRound,
-  KachufulPlayerRound,
-  TrumpSuit,
-} from "@/types/kachuful"
+import type { KachufulGameState, KachufulRound, KachufulPlayerRound, TrumpSuit } from "@/types/kachuful"
 
 interface KachufulScoreboardProps {
   gameState: KachufulGameState
@@ -51,10 +30,7 @@ const TrumpIcon = ({ suit }: { suit: TrumpSuit }) => {
   }
 }
 
-const calculateCardsForRound = (
-  round: number,
-  maxCards: number
-) => {
+const calculateCardsForRound = (round: number, maxCards: number) => {
   if (round <= maxCards) {
     return round
   }
@@ -65,50 +41,31 @@ const calculateScore = (
   bid: number,
   tricks: number,
   zeroBidPoints: number,
-  negativePointsEnabled: boolean
+  negativePointsEnabled: boolean,
 ): number => {
   if (bid === tricks) {
     return bid === 0 ? zeroBidPoints : 10 + bid
   }
   if (negativePointsEnabled) {
-    if (bid > 0) return bid * -11
-    if (bid === 0) return -zeroBidPoints
+    if (bid > 0 && bid === 1 && tricks === 0) return -11
+    if (bid === 0 && tricks > 0) return -zeroBidPoints
   }
   return 0
 }
 
-export function KachufulScoreboard({
-  gameState,
-  onGameUpdate,
-}: KachufulScoreboardProps) {
+export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboardProps) {
   const [currentRoundData, setCurrentRoundData] = useState<{
     [playerIndex: string]: { bid: string; tricks: string }
-  }>(
-    gameState.players.reduce(
-      (acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }),
-      {}
-    )
-  )
+  }>(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }), {}))
   const [showCelebration, setShowCelebration] = useState(false)
 
-  const maxCards = Math.floor(
-    (52 * gameState.deckCount) / gameState.players.length
-  )
-  const currentCards = calculateCardsForRound(
-    gameState.currentRound,
-    maxCards
-  )
-  const currentTrump =
-    TRUMP_SUITS_ORDER[(gameState.currentRound - 1) % TRUMP_SUITS_ORDER.length]
+  const maxCards = Math.floor((52 * gameState.deckCount) / gameState.players.length)
+  const currentCards = calculateCardsForRound(gameState.currentRound, maxCards)
+  const currentTrump = TRUMP_SUITS_ORDER[(gameState.currentRound - 1) % TRUMP_SUITS_ORDER.length]
 
-  const updateRoundData = (
-    playerIndex: number,
-    field: "bid" | "tricks",
-    value: string
-  ) => {
-    // Only allow numeric input
+  const updateRoundData = (playerIndex: number, field: "bid" | "tricks", value: string) => {
     if (value !== "" && !/^\d+$/.test(value)) {
-        return;
+      return
     }
     setCurrentRoundData((prev) => ({
       ...prev,
@@ -121,29 +78,18 @@ export function KachufulScoreboard({
 
   const canAddRound = gameState.players.every((_, index) => {
     const data = currentRoundData[index]
-    return (
-      data &&
-      data.bid !== "" &&
-      data.tricks !== ""
-    )
+    return data && data.bid !== "" && data.tricks !== ""
   })
 
   const addRound = () => {
     if (!canAddRound) return
 
-    const newPlayerScores: KachufulPlayerRound[] = gameState.players.map(
-      (_, index) => {
-        const bid = parseInt(currentRoundData[index].bid) || 0
-        const tricks = parseInt(currentRoundData[index].tricks) || 0
-        const score = calculateScore(
-          bid,
-          tricks,
-          gameState.zeroBidPoints,
-          gameState.negativePointsEnabled
-        )
-        return { bid, tricks, score }
-      }
-    )
+    const newPlayerScores: KachufulPlayerRound[] = gameState.players.map((_, index) => {
+      const bid = parseInt(currentRoundData[index].bid) || 0
+      const tricks = parseInt(currentRoundData[index].tricks) || 0
+      const score = calculateScore(bid, tricks, gameState.zeroBidPoints, gameState.negativePointsEnabled)
+      return { bid, tricks, score }
+    })
 
     const newRound: KachufulRound = {
       roundNumber: gameState.currentRound,
@@ -159,11 +105,7 @@ export function KachufulScoreboard({
     }))
 
     const gameEnded = gameState.currentRound >= gameState.maxRounds
-    const winner = gameEnded
-      ? updatedPlayers.reduce((max, p) =>
-          p.totalScore > max.totalScore ? p : max
-        )
-      : undefined
+    const winner = gameEnded ? updatedPlayers.reduce((max, p) => (p.totalScore > max.totalScore ? p : max)) : undefined
 
     const updatedGameState: KachufulGameState = {
       ...gameState,
@@ -179,56 +121,28 @@ export function KachufulScoreboard({
       setShowCelebration(true)
     }
 
-    // Reset for next round
-    setCurrentRoundData(
-      gameState.players.reduce(
-        (acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }),
-        {}
-      )
-    )
+    setCurrentRoundData(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }), {}))
   }
 
   if (gameState.gameEnded && gameState.winner) {
     return (
       <div className="text-center space-y-8 max-w-4xl mx-auto animate-fade-in-scale">
-        <CelebrationEffects
-          trigger={showCelebration}
-          onComplete={() => setShowCelebration(false)}
-        />
+        <CelebrationEffects trigger={showCelebration} onComplete={() => setShowCelebration(false)} />
         <Card className="bg-gradient-to-r from-purple-900/20 to-blue-900/20 border-purple-500/30">
           <CardContent className="p-8">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Trophy className="h-8 w-8 text-purple-400 animate-pulse-glow" />
-              <span className="text-3xl font-bold text-purple-400">
-                Game Over!
-              </span>
+              <span className="text-3xl font-bold text-purple-400">Game Over!</span>
               <Crown className="h-6 w-6 text-purple-400" />
             </div>
             <p className="text-xl text-purple-200">
-              <strong>{gameState.winner.name}</strong> wins with{" "}
-              {gameState.winner.totalScore} points!
+              <strong>{gameState.winner.name}</strong> wins with {gameState.winner.totalScore} points!
             </p>
           </CardContent>
         </Card>
       </div>
     )
   }
-
-  const raceData = gameState.players.map((player) => ({
-    name: player.name,
-    score: player.totalScore,
-  }))
-
-  const historyWithTotals = gameState.rounds.map((round) => {
-    const roundTotals = gameState.players.map((_, pIndex) => {
-      let total = 0
-      for (let i = 0; i <= round.roundNumber - 1; i++) {
-        total += gameState.rounds[i].playerScores[pIndex].score
-      }
-      return total
-    })
-    return { ...round, totals: roundTotals }
-  })
 
   return (
     <div className="space-y-8 animate-slide-in-up">
@@ -245,37 +159,35 @@ export function KachufulScoreboard({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="overflow-x-auto custom-scrollbar">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-transparent">
-                  <TableHead className="text-slate-300">Player</TableHead>
-                  <TableHead className="text-center text-slate-300">Total Score</TableHead>
-                  <TableHead className="text-center text-slate-300 w-24">Bid</TableHead>
-                  <TableHead className="text-center text-slate-300 w-24">Tricks</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {gameState.players.map((player, index) => (
-                  <TableRow key={player.name} className="border-slate-700/50">
-                    <TableCell className="font-medium text-white">{player.name}</TableCell>
-                    <TableCell className="text-center">
-                       <Badge className="bg-slate-600 text-white">{player.totalScore}</Badge>
-                    </TableCell>
-                    <TableCell>
-                       <Input
-                          type="text"
-                          inputMode="numeric"
-                          pattern="[0-9]*"
-                          min="0"
-                          max={currentCards}
-                          value={currentRoundData[index]?.bid || ""}
-                          onChange={(e) => updateRoundData(index, "bid", e.target.value)}
-                          className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
-                          placeholder="0"
-                        />
-                    </TableCell>
-                    <TableCell>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {gameState.players.map((player, index) => (
+              <Card
+                key={player.name}
+                className="bg-slate-700/30 border-slate-600/50"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="font-medium text-white">{player.name}</span>
+                    <Badge className="bg-slate-600 text-white">Total: {player.totalScore}</Badge>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1 space-y-1">
+                      <label className="text-xs text-slate-400">Bid</label>
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        min="0"
+                        max={currentCards}
+                        value={currentRoundData[index]?.bid || ""}
+                        onChange={(e) => updateRoundData(index, "bid", e.target.value)}
+                        className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="text-xs text-slate-400">Tricks</label>
                       <Input
                         type="text"
                         inputMode="numeric"
@@ -287,11 +199,11 @@ export function KachufulScoreboard({
                         className="w-full text-center bg-slate-600/50 border-slate-500 text-white"
                         placeholder="0"
                       />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           <Button
@@ -306,88 +218,62 @@ export function KachufulScoreboard({
       </Card>
 
       {gameState.rounds.length > 0 && (
-        <>
-          <Card className="bg-slate-800/50 border-slate-700/50">
-            <CardHeader>
-              <CardTitle className="text-white">Race to Victory</CardTitle>
-              <CardDescription className="text-slate-400">
-                Current total scores
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={raceData} layout="vertical" margin={{ left: 10 }}>
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    tickLine={false}
-                    axisLine={false}
-                    stroke="hsl(var(--muted-foreground))"
-                    width={80}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--accent))" }}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      borderColor: "hsl(var(--border))",
-                    }}
-                  />
-                  <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-slate-800/50 border-slate-700/50">
-            <CardHeader>
-              <CardTitle className="text-white">Score History</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-x-auto custom-scrollbar">
-              <Table className="w-full">
-                <TableHeader>
-                  <TableRow className="border-slate-700 hover:bg-transparent">
-                    <TableHead className="text-slate-300">Round</TableHead>
-                    {gameState.players.map((player) => (
-                      <TableHead key={player.name} className="text-center text-slate-300">
-                        {player.name}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {historyWithTotals.slice().reverse().map((round) => (
-                    <TableRow key={round.roundNumber} className="border-slate-700/50">
-                      <TableCell className="font-medium text-white">
-                        <div className="flex flex-col">
-                          <span>Round {round.roundNumber}</span>
-                          <span className="text-xs text-slate-400">
-                            ({round.cards} cards, <TrumpIcon suit={round.trumpSuit} />)
+        <Card className="bg-slate-800/50 border-slate-700/50">
+          <CardHeader>
+            <CardTitle className="text-white">Score History</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto custom-scrollbar">
+            <table className="scoreboard-table w-full">
+              <thead>
+                <tr className="border-b border-slate-700">
+                  <th className="p-3 text-left font-medium text-slate-300 bg-slate-800/50">Round</th>
+                  {gameState.players.map((player) => (
+                    <th key={player.name} className="p-3 text-center font-medium text-slate-300 bg-slate-800/50">
+                      {player.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {gameState.rounds
+                  .slice()
+                  .reverse()
+                  .map((round) => (
+                    <tr key={round.roundNumber} className="border-b border-slate-700/50">
+                      <td className="p-3 bg-slate-800/50">
+                        <div className="flex flex-col items-center">
+                          <span className="font-medium text-white">R{round.roundNumber}</span>
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            ({round.cards}, <TrumpIcon suit={round.trumpSuit} />)
                           </span>
                         </div>
-                      </TableCell>
+                      </td>
                       {round.playerScores.map((pScore, pIndex) => (
-                        <TableCell key={pIndex} className="text-center">
-                          <div className="flex flex-col items-center">
-                             <Badge className={pScore.score > 0 ? "bg-green-600/80 text-white" : pScore.score < 0 ? "bg-red-600/80 text-white" : "bg-slate-600/80 text-white"}>
+                        <td key={pIndex} className="text-center p-3">
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge
+                              className={
+                                pScore.score > 0
+                                  ? "bg-green-600/80 text-white"
+                                  : pScore.score < 0
+                                    ? "bg-red-600/80 text-white"
+                                    : "bg-slate-600/80 text-white"
+                              }
+                            >
                               {pScore.score > 0 ? `+${pScore.score}` : pScore.score}
                             </Badge>
-                            <span className="text-xs text-slate-400 mt-1">
+                            <span className="text-xs text-slate-400">
                               {pScore.bid}/{pScore.tricks}
                             </span>
-                             <span className="text-sm font-bold text-white mt-1">
-                              {round.totals[pIndex]}
-                            </span>
                           </div>
-                        </TableCell>
+                        </td>
                       ))}
-                    </TableRow>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </>
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
       )}
     </div>
   )

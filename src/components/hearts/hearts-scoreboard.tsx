@@ -166,22 +166,24 @@ export function HeartsScoreboard({ gameState, onGameUpdate }: HeartsScoreboardPr
         <CardContent className="space-y-6">
           <Card className="bg-purple-950/20 border-purple-500/30">
             <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <Moon className="h-5 w-5 text-purple-400" />
-                <div className="flex-1">
-                  <span className="font-medium text-purple-200">Moon Shooter:</span>
-                  <p className="text-sm text-purple-300">Select if someone shot the moon this round</p>
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <Moon className="h-5 w-5 text-purple-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <span className="font-medium text-purple-200">Moon Shooter</span>
+                    <p className="text-sm text-purple-300 hidden md:block">Select if someone shot the moon</p>
+                  </div>
                 </div>
                 <Select
                   value={currentRoundData.moonShooter?.toString() || "none"}
                   onValueChange={(value) => setMoonShooter(value === "none" ? null : Number.parseInt(value))}
                 >
-                  <SelectTrigger className="w-48 bg-slate-700/50 border-slate-600 text-white">
+                  <SelectTrigger className="w-full md:w-48 bg-slate-700/50 border-slate-600 text-white">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-600">
                     <SelectItem value="none" className="text-white hover:bg-slate-700">
-                      No one shot the moon
+                      No Moon Shot
                     </SelectItem>
                     {gameState.players.map((player, index) => (
                       <SelectItem key={index} value={index.toString()} className="text-white hover:bg-slate-700">
@@ -211,36 +213,33 @@ export function HeartsScoreboard({ gameState, onGameUpdate }: HeartsScoreboardPr
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-medium">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <span className="font-medium text-white">{player.name}</span>
-                        <p className="text-sm text-slate-400">Enter points for this round</p>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Heart className="w-4 h-4 text-red-400" />
-                          <Input
-                            type="number"
-                            min="0"
-                            max={maxRoundPoints}
-                            value={currentRoundData.scores[index] || ""}
-                            onChange={(e) => updateScore(index, Number.parseInt(e.target.value) || 0)}
-                            className="w-20 text-center bg-slate-600/50 border-slate-500 text-white"
-                            placeholder="0"
-                          />
-                          <span className="text-sm text-slate-400">/ {maxRoundPoints}</span>
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                      <div className="flex items-center gap-3 flex-1 w-full">
+                        <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center text-white font-medium text-xs flex-shrink-0">
+                          {index + 1}
                         </div>
+                        <span className="font-medium text-white flex-1">{player.name}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-slate-400">Total:</span>
                           <Badge
-                            className={`${player.totalScore >= gameState.maxPoints ? "bg-red-600" : "bg-green-600"} text-white px-3 py-1`}
+                            className={`${player.totalScore >= gameState.maxPoints ? "bg-red-600" : "bg-green-600"} text-white px-2 py-1`}
                           >
                             {player.totalScore}
                           </Badge>
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2 w-full md:w-auto">
+                        <Heart className="w-4 h-4 text-red-400" />
+                        <Input
+                          type="number"
+                          min="0"
+                          max={maxRoundPoints}
+                          value={currentRoundData.scores[index] || ""}
+                          onChange={(e) => updateScore(index, Number.parseInt(e.target.value) || 0)}
+                          className="w-20 text-center bg-slate-600/50 border-slate-500 text-white"
+                          placeholder="0"
+                        />
+                        <span className="text-sm text-slate-400">/ {maxRoundPoints}</span>
                       </div>
                     </div>
                   </CardContent>
