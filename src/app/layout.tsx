@@ -19,6 +19,7 @@ export const metadata: Metadata = {
   keywords: ["scoreboard", "card games", "hearts", "kachuful", "score tracking"],
   authors: [{ name: "Scoreboard Hub" }],
   robots: "index, follow",
+  manifest: "/manifest.json",
 }
 
 export default function RootLayout({
@@ -31,6 +32,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
         {/* Google AdSense */}
         {adsenseClientId && process.env.NODE_ENV === "production" && (
           <Script
