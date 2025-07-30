@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   keywords: ["scoreboard", "card games", "hearts", "kachuful", "score tracking"],
   authors: [{ name: "Scoreboard Hub" }],
   robots: "index, follow",
-  manifest: "/manifest.json",
 }
 
 export default function RootLayout({
