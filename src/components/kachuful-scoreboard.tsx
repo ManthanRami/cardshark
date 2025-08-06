@@ -58,7 +58,7 @@ const calculateScore = (
 export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboardProps) {
   const [currentRoundData, setCurrentRoundData] = useState<{
     [playerIndex: string]: { bid: string; tricks: string }
-  }>(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "" } }), {}))
+  }>(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "0" } }), {}))
   const [showCelebration, setShowCelebration] = useState(false)
   const [editingRound, setEditingRound] = useState<KachufulRound | null>(null)
   const [editedScores, setEditedScores] = useState<{ [playerIndex: string]: { bid: string; tricks: string } } | null>(
@@ -127,7 +127,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
       setShowCelebration(true)
     }
 
-    setCurrentRoundData(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "" } }), {}))
+    setCurrentRoundData(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "0" } }), {}))
   }
 
   const handleEditRound = (round: KachufulRound) => {
