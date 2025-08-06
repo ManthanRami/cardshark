@@ -46,7 +46,7 @@ const calculateScore = (
   negativePointsEnabled: boolean,
 ): number => {
   if (bid === tricks) {
-    return bid === 0 ? zeroBidPoints : 10 + bid
+    return bid === 0 ? zeroBidPoints : bid * 10 + bid
   }
   if (negativePointsEnabled) {
     if (bid > 0 && bid === 1 && tricks === 0) return -11
