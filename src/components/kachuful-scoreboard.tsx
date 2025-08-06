@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -56,7 +57,7 @@ const calculateScore = (
 export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboardProps) {
   const [currentRoundData, setCurrentRoundData] = useState<{
     [playerIndex: string]: { bid: string; tricks: string }
-  }>(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }), {}))
+  }>(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "" } }), {}))
   const [showCelebration, setShowCelebration] = useState(false)
 
   const maxCards = Math.floor((52 * gameState.deckCount) / gameState.players.length)
@@ -121,7 +122,7 @@ export function KachufulScoreboard({ gameState, onGameUpdate }: KachufulScoreboa
       setShowCelebration(true)
     }
 
-    setCurrentRoundData(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "", tricks: "" } }), {}))
+    setCurrentRoundData(gameState.players.reduce((acc, _, index) => ({ ...acc, [index]: { bid: "0", tricks: "" } }), {}))
   }
 
   if (gameState.gameEnded && gameState.winner) {
